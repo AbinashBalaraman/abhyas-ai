@@ -111,7 +111,7 @@ export class MasterSupervisorOrchestrator {
     const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer|solve it|show solution|shortcut formula)\b/i.test(query);
 
     // 1. Check if query is asking for exam details, mark allocation, dates, pattern, negative marking, eligibility, attempts, optional
-    const isExamQuery = /\b(exam|notification|admit card|dates|schedule|when is|cutoff|vacancy|vacancies|eligibility|apply|calendar|sbi|ibps|ssc|rrb|upsc|cgl|chsl|cpo|mts|ntpc|alp|technician|loco pilot|group d|je|po|clerk|ias|marks|mark allocation|marking scheme|negative marking|tier|prelims|mains|cbt|cbat|sectional|weightage|duration|pattern|syllabus|age limit|attempts|optional|interview|paper|neet|jee)\b/i.test(q);
+    const isExamQuery = /\b(exam|notification|admit card|dates|schedule|when is|cutoff|vacancy|vacancies|eligibility|apply|calendar|sbi|ibps|ssc|rrb|upsc|cgl|chsl|cpo|mts|steno|ntpc|alp|controller|technician|loco pilot|group d|je|po|clerk|ias|marks|mark allocation|marking scheme|negative marking|tier|prelims|mains|cbt|cbat|sectional|weightage|duration|pattern|syllabus|age limit|attempts|optional|interview|paper|neet|jee|gate|net)\b/i.test(q);
     
     if (isExamQuery && !isSolvingPrecedingProblem) {
       const examWorker = this.registry.getAgent('exam_intel');
@@ -206,8 +206,10 @@ CURRENT REAL-WORLD DATE: August 2026${activeExamContext}
 4. MARK ALLOCATION & EXAM PATTERNS:
    - Provide structured markdown tables for mark allocation (Questions, Marks, Time, Negative Marking, Qualifying vs Merit status).
 5. EXPLORATORY TOPICS:
-   - When a student mentions a single topic or broad exam name (e.g. "RRB ALP", "SBI PO", "Trigonometry", "Photosynthesis"), give a concise 2-3 sentence overview and warmly invite them to choose how they'd like to proceed.
+   - When a student mentions a single topic or broad exam name (e.g. "RRB Section Controller", "RRB ALP", "SBI PO", "Trigonometry"), give a concise 2-3 sentence overview of that specific role/topic and warmly invite them to choose how they'd like to proceed.
 6. Use LaTeX for math: \\(...\\) for inline and \\[...\\] for display formulas.
-7. Incorporate verified tool data below whenever provided.${verifiedDataBlock}`;
+7. Incorporate verified tool data below whenever provided.
+8. NEVER CROSS-PROMOTE OR PIVOT TO UNRELATED EXAMS:
+   - Stay 100% laser-focused on the exact post and exam the student mentioned. If a student asks about RRB Section Controller, do NOT suggest pivoting to RRB ALP or other unrelated exams. Answer ONLY and directly for what the student asked.${verifiedDataBlock}`;
   }
 }
