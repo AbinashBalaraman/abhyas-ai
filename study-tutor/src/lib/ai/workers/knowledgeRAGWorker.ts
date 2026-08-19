@@ -8,18 +8,27 @@ export class KnowledgeRAGWorker implements DomainAgentPlugin {
   public readonly domainCategory = 'KNOWLEDGE_RAG' as const;
 
   evaluateSuitability(query: string, context: AgentContext): number {
-    const q = query.toLowerCase();
+    const q = query.trim().toLowerCase();
+
+    // Ignore greetings & pleasantries
+    if (/^(hi|hello|hey|greetings|namaste|thanks|thank\s*you|ok|okay|bye)\b/i.test(q)) {
+      return 0;
+    }
+
+    if (q.length <= 3 && !/\d/.test(q)) {
+      return 0;
+    }
 
     // High suitability for academic / concept queries
-    if (/\b(formula|explain|concept|rule|rules|syllabus|trick|tricks|derive|derivation|theorem|definition|meaning|difference between|how to solve)\b/i.test(q)) {
+    if (/\b(formula|explain|concept|rule|rules|syllabus|trick|tricks|derive|derivation|theorem|definition|meaning|difference between|how to solve|what is|why|how)\b/i.test(q)) {
       return 95;
     }
 
-    if (/\b(interest|ratio|percentage|algebra|geometry|syllogism|puzzle|blood relation|grammar|idiom|synonym|antonym|profit|loss|speed|distance|pipe|cistern|work)\b/i.test(q)) {
+    if (/\b(interest|ratio|percentage|algebra|geometry|syllogism|puzzle|blood relation|grammar|idiom|synonym|antonym|profit|loss|speed|distance|pipe|cistern|work|fraction|simplification|series|coding|decoding|history|geography|polity|economy|physics|chemistry|biology)\b/i.test(q)) {
       return 90;
     }
 
-    return 40; // baseline fallback for study queries
+    return 20; // low fallback for longer study queries
   }
 
   async execute(params: AgentExecutionParams): Promise<WorkerResult> {

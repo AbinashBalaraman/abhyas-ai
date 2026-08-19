@@ -7,8 +7,17 @@ export class ExamIntelWorker implements DomainAgentPlugin {
   public readonly domainCategory = 'EXAM_INTEL' as const;
 
   evaluateSuitability(query: string, context: AgentContext): number {
-    const q = query.toLowerCase();
+    const q = query.trim().toLowerCase();
     const historyText = (context.history || []).map(m => m.content.toLowerCase()).join(' ');
+
+    // Reject greetings
+    if (/^(hi|hello|hey|greetings|namaste|thanks|thank\s*you|ok|okay|bye)\b/i.test(q)) {
+      return 0;
+    }
+
+    if (q.length <= 3 && !/\d/.test(q)) {
+      return 0;
+    }
 
     // High suitability keywords
     if (/\b(notification|admit card|exam date|dates|when is|schedule|calendar|vacancy|vacancies|apply online|cutoff|eligibility)\b/i.test(q)) {
