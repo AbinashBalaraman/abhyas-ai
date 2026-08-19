@@ -111,16 +111,21 @@ async function callOpenCodeZen(
   modelName: string,
   systemPrompt: string,
   userMessage: string,
-  apiKey: string
+  apiKey: string,
+  retryCount: number = 0
 ): Promise<string> {
   try {
     console.log(`Routing to OpenCode Zen (${modelName})...`);
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (apiKey) {
+      headers['Authorization'] = `Bearer ${apiKey}`;
+    }
+
     const response = await fetch('https://opencode.ai/zen/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers,
       body: JSON.stringify({
         model: modelName,
         messages: [
@@ -133,6 +138,12 @@ async function callOpenCodeZen(
 
     if (!response.ok) {
       const errorText = await response.text();
+      // If rate limited on this key/model, cascade gracefully
+      if (response.status === 429 && retryCount === 0) {
+        console.warn('OpenCode key hit 429 rate limit. Retrying with alternative public channel...');
+        // Retry with public pool or alternative model
+        return callOpenCodeZen(modelName === 'deepseek-v4-flash-free' ? 'mimo-v2.5-free' : 'deepseek-v4-flash-free', systemPrompt, userMessage, '', 1);
+      }
       throw new Error(`OpenCode Zen error: ${response.status} - ${errorText}`);
     }
 
@@ -143,6 +154,10 @@ async function callOpenCodeZen(
     throw new Error('OpenCode Zen returned empty choices');
   } catch (error: any) {
     console.error(`OpenCode Zen call failed for ${modelName}:`, error.message);
+    if (retryCount === 0) {
+      console.log('Attempting fallback to mimo-v2.5-free...');
+      return callOpenCodeZen('mimo-v2.5-free', systemPrompt, userMessage, '', 1);
+    }
     return `⚠️ Model communication error: ${error.message}. Please check if the API keys are correct and you are connected to the internet.`;
   }
 }
