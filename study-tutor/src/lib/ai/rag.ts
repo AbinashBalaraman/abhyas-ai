@@ -287,6 +287,16 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
     console.error('Web search step failed:', error);
   }
 
+  const isLiveQuery = /\b(next|date|dates|when|notification|schedule|current|latest|vacancy|vacancies|apply|admit|result|cutoff|cut-off|update|news)\b/i.test(question);
+
+  // If live search has the exact answer for real-time questions, return it directly to avoid double-LLM latency timeouts
+  if (isLiveQuery && web.text && web.text.length > 50) {
+    return {
+      response: web.text,
+      sources: [...webSources, ...sources]
+    };
+  }
+
   const systemPrompt = `You are a highly helpful and precise AI Study Tutor for Indian Competitive Exams (SSC, RRB, Banking/IBPS/SBI, UPSC, Defence, State PSCs).
 
 ${webContext ? `${webContext}\n\nIMPORTANT: You have active live internet search data provided above. Use these live search results to state exact current exam dates, notifications, and application schedules with total confidence. Do NOT say you lack internet or live access.` : ''}
@@ -310,8 +320,8 @@ ${context || 'No specific textbook chapter context needed for this query.'}
   } catch (error: any) {
     console.error('Error generating answer in rag:', error);
     return {
-      response: `Failed to generate answer: ${error.message}`,
-      sources: []
+      response: web.text || `Failed to generate answer: ${error.message}`,
+      sources: webSources
     };
   }
 }
