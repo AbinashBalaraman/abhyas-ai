@@ -2,14 +2,38 @@
   "name": "abhyas-ai",
   "version": "1.0.0",
   "private": true,
-  "description": "Abhyas AI — Competitive Exam Preparation & AI Tutor Platform",
+  "workspaces": [
+    "study-tutor"
+  ],
   "scripts": {
-    "dev": "npm run dev --prefix study-tutor",
-    "build": "npm run build --prefix study-tutor",
-    "start": "npm run start --prefix study-tutor",
-    "lint": "npm run lint --prefix study-tutor"
+    "dev": "npm --prefix study-tutor run dev",
+    "build": "cd study-tutor && npm install && npm run build",
+    "start": "npm --prefix study-tutor run start",
+    "lint": "npm --prefix study-tutor run lint"
   },
   "dependencies": {
-    "next": "^16.2.9"
+    "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.2.1",
+    "@vercel/postgres": "^0.10.0",
+    "katex": "^0.18.1",
+    "lightningcss": "^1.32.0",
+    "next": "16.2.9",
+    "pg": "^8.22.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
