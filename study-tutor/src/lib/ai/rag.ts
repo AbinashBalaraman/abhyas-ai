@@ -287,6 +287,9 @@ export async function getAnswer(
     }
   }
 
+  // Detect whether this is an Exam overview / date / notification query or a Chapter concept query
+  const isExamNotificationQuery = /\b(ibps|sbi|ssc|rrb|upsc|cgl|chsl|ntpc|po|clerk|exam|exams|notification|admit|date|dates|when|schedule|calendar|vacancy|vacancies|apply)\b/i.test(question);
+
   const { context, sources } = await findContext(resolvedQuery);
 
   // Live web search using Keyless DDG + Gemini
@@ -310,11 +313,16 @@ export async function getAnswer(
 
   const isLiveQuery = /\b(next|date|dates|when|notification|schedule|current|latest|vacancy|vacancies|apply|admit|result|cutoff|cut-off|update|news)\b/i.test(question);
 
+  // Determine appropriate sources (do NOT cite math/grammar textbook chapters for exam date queries!)
+  const relevantSources = isExamNotificationQuery 
+    ? (webSources.length > 0 ? webSources : getOfficialExamSources(resolvedQuery))
+    : [...webSources, ...sources];
+
   // If live search has the exact answer for real-time questions, return it directly
   if (isLiveQuery && webText && webText.length > 50) {
     return {
       response: webText,
-      sources: [...webSources, ...sources]
+      sources: relevantSources
     };
   }
 
@@ -342,7 +350,7 @@ Answer clearly, concisely, and use Markdown tables and bold text. Keep your answ
 ${webContext ? `${webContext}\n\nUse the live search results above for all exact dates, schedules, and vacancies.` : ''}
 
 === STUDY MATERIAL CONTEXT ===
-${context || 'No specific textbook chapter context needed for this query.'}
+${!isExamNotificationQuery ? (context || 'No specific textbook chapter context needed.') : 'Not applicable for exam date queries.'}
 `;
 
   try {
@@ -350,7 +358,7 @@ ${context || 'No specific textbook chapter context needed for this query.'}
     if (!response.includes('All AI channels are temporarily busy')) {
       return {
         response,
-        sources: [...webSources, ...sources]
+        sources: relevantSources
       };
     }
   } catch (error: any) {
@@ -361,12 +369,59 @@ ${context || 'No specific textbook chapter context needed for this query.'}
   const fallbackAnswer = generateOfflineStudyResponse(resolvedQuery, context, sources, historyText);
   return {
     response: fallbackAnswer,
-    sources: [...webSources, ...sources]
+    sources: relevantSources
   };
+}
+
+function getOfficialExamSources(query: string): Source[] {
+  const q = query.toLowerCase();
+  if (q.includes('ibps')) {
+    return [{ title: 'Institute of Banking Personnel Selection (Official)', subject: 'Official Portal', path: 'https://www.ibps.in/' }];
+  }
+  if (q.includes('sbi')) {
+    return [{ title: 'State Bank of India Careers (Official)', subject: 'Official Portal', path: 'https://sbi.co.in/web/careers' }];
+  }
+  if (q.includes('ssc')) {
+    return [{ title: 'Staff Selection Commission (Official)', subject: 'Official Portal', path: 'https://ssc.gov.in/' }];
+  }
+  if (q.includes('rrb') || q.includes('railway')) {
+    return [{ title: 'Railway Recruitment Boards (Official)', subject: 'Official Portal', path: 'https://rrbapply.gov.in/' }];
+  }
+  return [{ title: 'Official Exam Notification Portal', subject: 'Official Source', path: 'https://www.ibps.in/' }];
 }
 
 function generateOfflineStudyResponse(question: string, context: string, sources: Source[], historyText: string = ''): string {
   const q = question.toLowerCase();
+
+  // SBI PO & Clerk Exam Information (Official 2026 Cycle)
+  if (q.includes('sbi')) {
+    return `# 🏦 SBI PO 2026 Official Overview & Expected Schedule
+
+The State Bank of India conducts the Probationary Officer (PO) recruitment annually for 2,000+ vacancies across India.
+
+### 📅 Expected 2026 Examination Schedule
+| Event | Expected Timeline |
+|---|---|
+| **Official Notification Release** | **September 2026** |
+| **Online Application Window** | **September – October 2026** |
+| **Preliminary Exam (Phase 1)** | 🎯 **November 2026** |
+| **Mains Exam (Phase 2)** | **December 2026 / January 2027** |
+| **Psychometric Test & Interview** | **February 2027** |
+
+---
+
+### 📝 SBI PO Prelims Exam Pattern (60 mins, 100 Marks)
+| Section | Questions | Marks | Time |
+|---|---:|---:|---:|
+| English Language | 30 | 30 | 20 mins |
+| Quantitative Aptitude | 35 | 35 | 20 mins |
+| Reasoning Ability | 35 | 35 | 20 mins |
+| **Total** | **100** | **100** | **60 mins** |
+
+- **Official Website:** [sbi.co.in/careers](https://sbi.co.in/web/careers)
+- **Negative Marking:** $-0.25$ marks per incorrect answer.
+- **Sectional Timing:** 20 minutes strictly enforced for each section.`;
+  }
 
   // IBPS PO Exam Information (Official 2026 Cycle - CRP PO/MT-XVI)
   if (q.includes('ibps') || (q.includes('po') && (q.includes('bank') || q.includes('exam') || q.includes('next') || q.includes('admit') || q.includes('date')))) {
@@ -468,7 +523,7 @@ The Staff Selection Commission has released the official exam schedule for the *
 💡 *Tip: Ask about any specific exam above for full syllabus, solved formulas, and preparation tips!*`;
   }
 
-  // If textbook chapter context was retrieved, provide a structured summary
+  // If textbook chapter context was retrieved for concept queries, provide a structured summary
   if (context && context.trim().length > 100) {
     return `### 📚 Study Guide & Concept Summary
 
