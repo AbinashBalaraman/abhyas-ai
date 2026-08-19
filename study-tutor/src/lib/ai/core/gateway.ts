@@ -110,7 +110,7 @@ export class MultiTierModelGateway {
         model: modelName,
         messages: formattedMessages,
         temperature: 0.4,
-        max_tokens: 1200
+        max_tokens: 2000
       })
     });
 
@@ -145,7 +145,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(5500),
+        signal: AbortSignal.timeout(6000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -153,7 +153,7 @@ export class MultiTierModelGateway {
           contents,
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 1200
+            maxOutputTokens: 2500
           }
         })
       }
