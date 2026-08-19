@@ -1,6 +1,4 @@
-import { ModelCircuitBreaker } from './circuit-breaker';
-
-export type ModelTier = 'TIER1_PARALLEL_LLM' | 'TIER2_FALLBACK';
+export type ModelTier = 'TIER1_GEMINI_LITE' | 'TIER2_OPENCODE' | 'TIER3_SAFE_FALLBACK';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -20,58 +18,59 @@ export class MultiTierModelGateway {
   }
 
   /**
-   * Execute multi-turn conversation with high-performance LLM racing across OpenCode and Gemini
+   * Execute multi-turn conversation with high-speed LLM cascading across Gemini Flash-Lite & OpenCode
    */
   async executeChat(
     messages: ChatMessage[],
     systemPrompt: string,
-    preferredModel: string = 'nemotron-3.5-lightning-free'
+    preferredModel: string = 'gemini-flash-lite-latest'
   ): Promise<{ text: string; tierUsed: ModelTier; provider: string }> {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
-    const candidatePromises: Promise<{ text: string; provider: string }>[] = [];
-
-    // 1. Parallel candidate: OpenCode Nemotron 3.5 Lightning (Ultra-fast)
-    if (openCodeKey) {
-      candidatePromises.push(
-        this.callOpenCode('nemotron-3.5-lightning-free', systemPrompt, messages, openCodeKey)
-          .then(text => ({ text, provider: 'nemotron-3.5-lightning-free' }))
-      );
-      candidatePromises.push(
-        this.callOpenCode('deepseek-v4-flash-free', systemPrompt, messages, openCodeKey)
-          .then(text => ({ text, provider: 'deepseek-v4-flash-free' }))
-      );
-    }
-
-    // 2. Parallel candidate: Gemini 3.6 Flash
+    // 1. Primary: Lightning-fast Gemini Flash-Lite models (sub-1s latency)
     if (geminiKey) {
-      candidatePromises.push(
-        this.callGeminiDirect('gemini-3.6-flash', systemPrompt, messages, geminiKey)
-          .then(text => ({ text, provider: 'gemini-3.6-flash' }))
-      );
-    }
-
-    if (candidatePromises.length > 0) {
-      try {
-        const winner = await Promise.any(candidatePromises);
-        if (winner && winner.text) {
-          return {
-            text: winner.text,
-            tierUsed: 'TIER1_PARALLEL_LLM',
-            provider: winner.provider
-          };
+      const geminiCandidates = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
+      for (const gm of geminiCandidates) {
+        try {
+          const text = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
+          if (text) {
+            return {
+              text,
+              tierUsed: 'TIER1_GEMINI_LITE',
+              provider: gm
+            };
+          }
+        } catch (e) {
+          // try next model
         }
-      } catch (err) {
-        console.warn('All parallel LLM providers failed or timed out:', err);
       }
     }
 
-    // Fallback if all APIs were down or rate limited
+    // 2. Secondary: OpenCode Models (Nemotron 3.5 Lightning -> DeepSeek v4)
+    if (openCodeKey) {
+      const openCodeCandidates = ['nemotron-3.5-lightning-free', 'deepseek-v4-flash-free'];
+      for (const om of openCodeCandidates) {
+        try {
+          const text = await this.callOpenCode(om, systemPrompt, messages, openCodeKey);
+          if (text) {
+            return {
+              text,
+              tierUsed: 'TIER2_OPENCODE',
+              provider: om
+            };
+          }
+        } catch (e) {
+          // try next model
+        }
+      }
+    }
+
+    // 3. Fallback: Contextual assistance
     const lastUserMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
     return {
-      text: `Regarding "${lastUserMsg}": Would you like to explore the fundamental concepts, key formulas, official exam dates, or practice questions?`,
-      tierUsed: 'TIER2_FALLBACK',
+      text: `Regarding "${lastUserMsg}": Would you like to explore the core concepts, official exam dates, or practice questions on this?`,
+      tierUsed: 'TIER3_SAFE_FALLBACK',
       provider: 'safe-fallback'
     };
   }
@@ -87,51 +86,12 @@ export class MultiTierModelGateway {
     return this.executeChat([{ role: 'user', content: userMessage }], systemPrompt, preferredModel);
   }
 
-  private async callOpenCode(
-    modelName: string,
-    systemPrompt: string,
-    messages: ChatMessage[],
-    apiKey: string
-  ): Promise<string> {
-    const formattedMessages = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map(m => ({ role: m.role, content: m.content }))
-    ];
-
-    const response = await fetch('https://opencode.ai/zen/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      signal: AbortSignal.timeout(12000),
-      body: JSON.stringify({
-        model: modelName,
-        messages: formattedMessages,
-        temperature: 0.4,
-        max_tokens: 1500
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`OpenCode ${modelName} returned status ${response.status}`);
-    }
-
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error(`OpenCode ${modelName} returned empty text`);
-
-    // Strip thinking process tags if emitted
-    content = content.replace(/^Here's a thinking process:[\s\S]*?(?=\n\n|\n[A-Z#*])/i, '').trim();
-    return content;
-  }
-
   private async callGeminiDirect(
     modelName: string,
     systemPrompt: string,
     messages: ChatMessage[],
     apiKey: string
-  ): Promise<string> {
+  ): Promise<string | null> {
     const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
     
     for (const m of messages) {
@@ -150,7 +110,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(10000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -158,19 +118,50 @@ export class MultiTierModelGateway {
           contents,
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 2000
+            maxOutputTokens: 1500
           }
         })
       }
     );
 
-    if (!response.ok) {
-      throw new Error(`Gemini ${modelName} returned status ${response.status}`);
-    }
-
+    if (!response.ok) return null;
     const data = await response.json();
-    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!content) throw new Error(`Gemini ${modelName} returned empty text`);
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+  }
+
+  private async callOpenCode(
+    modelName: string,
+    systemPrompt: string,
+    messages: ChatMessage[],
+    apiKey: string
+  ): Promise<string | null> {
+    const formattedMessages = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map(m => ({ role: m.role, content: m.content }))
+    ];
+
+    const response = await fetch('https://opencode.ai/zen/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({
+        model: modelName,
+        messages: formattedMessages,
+        temperature: 0.4,
+        max_tokens: 1500
+      })
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content || null;
+
+    if (content) {
+      content = content.replace(/^Here's a thinking process:[\s\S]*?(?=\n\n|\n[A-Z#*])/i, '').trim();
+    }
     return content;
   }
 }
