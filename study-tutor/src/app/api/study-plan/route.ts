@@ -3,7 +3,7 @@ import { callLLM } from '@/lib/ai/llm';
 
 export async function POST(request: Request) {
   try {
-    const { examType, weakAreas, model = 'gemini' } = await request.json();
+    const { examType, weakAreas, model = 'deepseek-free' } = await request.json();
     
     if (!examType) {
       return NextResponse.json(
@@ -48,3 +48,4 @@ Format the plan in beautiful, clean markdown with clear headings, bold text, bul
   }
 }
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
