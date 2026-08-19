@@ -1,6 +1,6 @@
 import { ModelCircuitBreaker } from './circuit-breaker';
 
-export type ModelTier = 'TIER1_GEMINI' | 'TIER2_OPENCODE' | 'TIER3_SAFE_MODE';
+export type ModelTier = 'TIER1_PARALLEL_LLM' | 'TIER2_FALLBACK';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -9,12 +9,8 @@ export interface ChatMessage {
 
 export class MultiTierModelGateway {
   private static instance: MultiTierModelGateway;
-  private breakers = new Map<string, ModelCircuitBreaker>();
 
-  private constructor() {
-    this.breakers.set('gemini-direct', new ModelCircuitBreaker('Gemini-Direct'));
-    this.breakers.set('opencode-models', new ModelCircuitBreaker('OpenCode-Models'));
-  }
+  private constructor() {}
 
   public static getInstance(): MultiTierModelGateway {
     if (!MultiTierModelGateway.instance) {
@@ -24,62 +20,59 @@ export class MultiTierModelGateway {
   }
 
   /**
-   * Execute multi-turn conversation across cascading AI tiers
+   * Execute multi-turn conversation with high-performance LLM racing across OpenCode and Gemini
    */
   async executeChat(
     messages: ChatMessage[],
     systemPrompt: string,
-    preferredModel: string = 'gemini-3.6-flash'
+    preferredModel: string = 'nemotron-3.5-lightning-free'
   ): Promise<{ text: string; tierUsed: ModelTier; provider: string }> {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
-    // 1. Primary: Gemini 3.6 Flash / 2.5 Flash
-    if (geminiKey) {
-      const geminiBreaker = this.breakers.get('gemini-direct')!;
-      if (geminiBreaker.isAvailable()) {
-        const geminiModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
-        for (const gm of geminiModels) {
-          try {
-            const res = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
-            if (res) {
-              geminiBreaker.recordSuccess();
-              return { text: res, tierUsed: 'TIER1_GEMINI', provider: gm };
-            }
-          } catch (e) {
-            // try next model
-          }
-        }
-        geminiBreaker.recordFailure();
-      }
-    }
+    const candidatePromises: Promise<{ text: string; provider: string }>[] = [];
 
-    // 2. Tier 2: OpenCode Models (Nemotron 3.5 -> DeepSeek v4 -> Mimo 2.5)
+    // 1. Parallel candidate: OpenCode Nemotron 3.5 Lightning (Ultra-fast)
     if (openCodeKey) {
-      const openCodeBreaker = this.breakers.get('opencode-models')!;
-      if (openCodeBreaker.isAvailable()) {
-        const modelsToTry = ['nemotron-3.5-lightning-free', 'deepseek-v4-flash-free', 'mimo-v2.5-free'];
-        for (const m of modelsToTry) {
-          try {
-            const openCodeRes = await this.callOpenCode(m, systemPrompt, messages, openCodeKey);
-            if (openCodeRes) {
-              openCodeBreaker.recordSuccess();
-              return { text: openCodeRes, tierUsed: 'TIER2_OPENCODE', provider: m };
-            }
-          } catch (err) {
-            // try next
-          }
+      candidatePromises.push(
+        this.callOpenCode('nemotron-3.5-lightning-free', systemPrompt, messages, openCodeKey)
+          .then(text => ({ text, provider: 'nemotron-3.5-lightning-free' }))
+      );
+      candidatePromises.push(
+        this.callOpenCode('deepseek-v4-flash-free', systemPrompt, messages, openCodeKey)
+          .then(text => ({ text, provider: 'deepseek-v4-flash-free' }))
+      );
+    }
+
+    // 2. Parallel candidate: Gemini 3.6 Flash
+    if (geminiKey) {
+      candidatePromises.push(
+        this.callGeminiDirect('gemini-3.6-flash', systemPrompt, messages, geminiKey)
+          .then(text => ({ text, provider: 'gemini-3.6-flash' }))
+      );
+    }
+
+    if (candidatePromises.length > 0) {
+      try {
+        const winner = await Promise.any(candidatePromises);
+        if (winner && winner.text) {
+          return {
+            text: winner.text,
+            tierUsed: 'TIER1_PARALLEL_LLM',
+            provider: winner.provider
+          };
         }
-        openCodeBreaker.recordFailure();
+      } catch (err) {
+        console.warn('All parallel LLM providers failed or timed out:', err);
       }
     }
 
-    // 3. Tier 3: Context-aware fallback response
+    // Fallback if all APIs were down or rate limited
     const lastUserMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
     return {
-      text: `Regarding "${lastUserMsg}": Would you like me to walk through the core concepts, official exam dates, or practice questions on this?`,
-      tierUsed: 'TIER3_SAFE_MODE',
-      provider: 'fallback'
+      text: `Regarding "${lastUserMsg}": Would you like to explore the fundamental concepts, key formulas, official exam dates, or practice questions?`,
+      tierUsed: 'TIER2_FALLBACK',
+      provider: 'safe-fallback'
     };
   }
 
@@ -99,7 +92,7 @@ export class MultiTierModelGateway {
     systemPrompt: string,
     messages: ChatMessage[],
     apiKey: string
-  ): Promise<string | null> {
+  ): Promise<string> {
     const formattedMessages = [
       { role: 'system', content: systemPrompt },
       ...messages.map(m => ({ role: m.role, content: m.content }))
@@ -111,7 +104,7 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(6500),
+      signal: AbortSignal.timeout(12000),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
@@ -120,15 +113,16 @@ export class MultiTierModelGateway {
       })
     });
 
-    if (!response.ok) return null;
-    const data = await response.json();
-    let content = data.choices?.[0]?.message?.content || null;
-
-    if (content) {
-      // Clean thinking process logs if model outputs them
-      content = content.replace(/^Here's a thinking process:[\s\S]*?(?=\n\n|\n[A-Z#*])/i, '').trim();
+    if (!response.ok) {
+      throw new Error(`OpenCode ${modelName} returned status ${response.status}`);
     }
 
+    const data = await response.json();
+    let content = data.choices?.[0]?.message?.content;
+    if (!content) throw new Error(`OpenCode ${modelName} returned empty text`);
+
+    // Strip thinking process tags if emitted
+    content = content.replace(/^Here's a thinking process:[\s\S]*?(?=\n\n|\n[A-Z#*])/i, '').trim();
     return content;
   }
 
@@ -137,7 +131,7 @@ export class MultiTierModelGateway {
     systemPrompt: string,
     messages: ChatMessage[],
     apiKey: string
-  ): Promise<string | null> {
+  ): Promise<string> {
     const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
     
     for (const m of messages) {
@@ -156,7 +150,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(6500),
+        signal: AbortSignal.timeout(12000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -170,8 +164,13 @@ export class MultiTierModelGateway {
       }
     );
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      throw new Error(`Gemini ${modelName} returned status ${response.status}`);
+    }
+
     const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) throw new Error(`Gemini ${modelName} returned empty text`);
+    return content;
   }
 }
