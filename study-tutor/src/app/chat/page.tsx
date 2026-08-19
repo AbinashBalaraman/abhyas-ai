@@ -8,6 +8,7 @@ import rehypeKatex from 'rehype-katex';
 export default function ChatPage() {
   const [question, setQuestion] = useState('');
   const [model, setModel] = useState('gemini');
+  const [sessionId, setSessionId] = useState<string>('');
   const [messages, setMessages] = useState<Array<{
     role: 'user' | 'ai';
     content: string;
@@ -16,14 +17,26 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load chat history from DB on mount
+  // Initialize unique browser session ID and load session chat history
   useEffect(() => {
+    let sid = '';
+    try {
+      sid = localStorage.getItem('abhyas_session_id') || '';
+      if (!sid) {
+        sid = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+        localStorage.setItem('abhyas_session_id', sid);
+      }
+    } catch (e) {
+      sid = 'sess_' + Date.now();
+    }
+    setSessionId(sid);
+
     const fetchHistory = async () => {
       try {
-        const response = await fetch('/api/chat');
+        const response = await fetch(`/api/chat?sessionId=${encodeURIComponent(sid)}`);
         if (response.ok) {
           const data = await response.json();
-          if (data.history) {
+          if (data.history && data.history.length > 0) {
             setMessages(data.history);
           }
         }
@@ -52,7 +65,7 @@ export default function ChatPage() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userQuestion, model }),
+        body: JSON.stringify({ question: userQuestion, model, sessionId }),
       });
       
       const data = await response.json();
@@ -77,7 +90,11 @@ export default function ChatPage() {
   };
 
   const handleClearHistory = async () => {
-    // In a real application, you'd call a DELETE endpoint. For simplicity, we just clear local state.
+    try {
+      const newSid = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+      localStorage.setItem('abhyas_session_id', newSid);
+      setSessionId(newSid);
+    } catch (e) {}
     setMessages([]);
   };
 

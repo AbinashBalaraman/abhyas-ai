@@ -2,9 +2,11 @@ import { getAnswer } from '@/lib/ai/rag';
 import { getChatHistory, saveChatMessage } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const history = await getChatHistory();
+    const { searchParams } = new URL(request.url);
+    const sessionId = searchParams.get('sessionId') || request.headers.get('x-session-id') || 'default';
+    const history = await getChatHistory(sessionId);
     return NextResponse.json({ history });
   } catch (error: any) {
     return NextResponse.json(
@@ -19,6 +21,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const question = body.question || body.message;
     const model = body.model || 'gemini';
+    const sessionId = body.sessionId || request.headers.get('x-session-id') || 'default';
     
     if (!question || !question.trim()) {
       return NextResponse.json(
@@ -27,14 +30,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Save user message to database
-    await saveChatMessage('user', question);
+    // Save user message to database isolated by session
+    await saveChatMessage('user', question, [], sessionId);
 
     // Get answer from RAG
     const { response, sources } = await getAnswer(question, model);
 
-    // Save AI response to database
-    await saveChatMessage('ai', response, sources);
+    // Save AI response to database isolated by session
+    await saveChatMessage('ai', response, sources, sessionId);
 
     return NextResponse.json({ response, sources, rag_used: !!sources?.length });
   } catch (error: any) {

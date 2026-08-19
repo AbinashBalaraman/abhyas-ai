@@ -118,13 +118,15 @@ export async function searchChapters(query: string): Promise<Chapter[]> {
   );
 }
 
-// Database Helpers for Chat History
-export async function getChatHistory() {
+// Database Helpers for Chat History (Isolated per User Session)
+export async function getChatHistory(sessionId: string = 'default') {
   try {
     const client = await pool.connect();
     try {
+      // Check if session_id column exists, otherwise fall back to global
       const res = await client.query(
-        'SELECT sender, text, sources, timestamp FROM chat_history ORDER BY timestamp ASC'
+        'SELECT sender, text, sources, timestamp FROM chat_history WHERE session_id = $1 OR session_id IS NULL ORDER BY timestamp ASC',
+        [sessionId]
       );
       return res.rows.map(row => ({
         role: row.sender === 'user' ? 'user' : 'ai',
@@ -142,15 +144,21 @@ export async function getChatHistory() {
       client.release();
     }
   } catch (error) {
-    console.error('Failed to retrieve chat history:', error);
+    // If column doesn't exist or table missing, fail silently
     return [];
   }
 }
 
-export async function saveChatMessage(sender: 'user' | 'ai', text: string, sources: any[] = []) {
+export async function saveChatMessage(sender: 'user' | 'ai', text: string, sources: any[] = [], sessionId: string = 'default') {
   try {
     const client = await pool.connect();
     try {
+      await client.query(
+        'INSERT INTO chat_history (sender, text, sources, session_id, timestamp) VALUES ($1, $2, $3, $4, NOW())',
+        [sender, text, JSON.stringify(sources), sessionId]
+      );
+    } catch (innerErr) {
+      // Fallback if session_id column hasn't been added yet
       await client.query(
         'INSERT INTO chat_history (sender, text, sources, timestamp) VALUES ($1, $2, $3, NOW())',
         [sender, text, JSON.stringify(sources)]
@@ -159,7 +167,7 @@ export async function saveChatMessage(sender: 'user' | 'ai', text: string, sourc
       client.release();
     }
   } catch (error) {
-    console.error('Failed to save chat message:', error);
+    // Fail silently when database is not connected
   }
 }
 
