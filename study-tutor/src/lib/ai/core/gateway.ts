@@ -1,6 +1,6 @@
 import { ModelCircuitBreaker } from './circuit-breaker';
 
-export type ModelTier = 'TIER1_OPENCODE' | 'TIER2_GEMINI' | 'TIER3_SAFE_MODE';
+export type ModelTier = 'TIER1_GEMINI' | 'TIER2_OPENCODE' | 'TIER3_SAFE_MODE';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -13,7 +13,7 @@ export class MultiTierModelGateway {
 
   private constructor() {
     this.breakers.set('gemini-direct', new ModelCircuitBreaker('Gemini-Direct'));
-    this.breakers.set('opencode-deepseek', new ModelCircuitBreaker('OpenCode-DeepSeek'));
+    this.breakers.set('opencode-models', new ModelCircuitBreaker('OpenCode-Models'));
   }
 
   public static getInstance(): MultiTierModelGateway {
@@ -34,38 +34,44 @@ export class MultiTierModelGateway {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
-    // 1. Primary: Gemini 3.6 Flash
+    // 1. Primary: Gemini 3.6 Flash / 2.5 Flash
     if (geminiKey) {
       const geminiBreaker = this.breakers.get('gemini-direct')!;
       if (geminiBreaker.isAvailable()) {
-        try {
-          const res = await this.callGeminiDirect('gemini-3.6-flash', systemPrompt, messages, geminiKey);
-          if (res) {
-            geminiBreaker.recordSuccess();
-            return { text: res, tierUsed: 'TIER2_GEMINI', provider: 'gemini-3.6-flash' };
+        const geminiModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+        for (const gm of geminiModels) {
+          try {
+            const res = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
+            if (res) {
+              geminiBreaker.recordSuccess();
+              return { text: res, tierUsed: 'TIER1_GEMINI', provider: gm };
+            }
+          } catch (e) {
+            // try next model
           }
-        } catch (e) {
-          geminiBreaker.recordFailure();
         }
+        geminiBreaker.recordFailure();
       }
     }
 
-    // 2. Tier 2: OpenCode Models (DeepSeek v4 Flash -> Mimo 2.5)
-    const tier1Breaker = this.breakers.get('opencode-deepseek')!;
-    if (tier1Breaker.isAvailable() && openCodeKey) {
-      const modelsToTry = ['deepseek-v4-flash-free', 'mimo-v2.5-free'];
-      for (const m of modelsToTry) {
-        try {
-          const openCodeRes = await this.callOpenCode(m, systemPrompt, messages, openCodeKey);
-          if (openCodeRes) {
-            tier1Breaker.recordSuccess();
-            return { text: openCodeRes, tierUsed: 'TIER1_OPENCODE', provider: m };
+    // 2. Tier 2: OpenCode Models (Nemotron 3.5 -> DeepSeek v4 -> Mimo 2.5)
+    if (openCodeKey) {
+      const openCodeBreaker = this.breakers.get('opencode-models')!;
+      if (openCodeBreaker.isAvailable()) {
+        const modelsToTry = ['nemotron-3.5-lightning-free', 'deepseek-v4-flash-free', 'mimo-v2.5-free'];
+        for (const m of modelsToTry) {
+          try {
+            const openCodeRes = await this.callOpenCode(m, systemPrompt, messages, openCodeKey);
+            if (openCodeRes) {
+              openCodeBreaker.recordSuccess();
+              return { text: openCodeRes, tierUsed: 'TIER2_OPENCODE', provider: m };
+            }
+          } catch (err) {
+            // try next
           }
-        } catch (err) {
-          // try next
         }
+        openCodeBreaker.recordFailure();
       }
-      tier1Breaker.recordFailure();
     }
 
     // 3. Tier 3: Context-aware fallback response
@@ -105,18 +111,25 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(4500),
+      signal: AbortSignal.timeout(6500),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
         temperature: 0.4,
-        max_tokens: 2000
+        max_tokens: 1500
       })
     });
 
     if (!response.ok) return null;
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || null;
+    let content = data.choices?.[0]?.message?.content || null;
+
+    if (content) {
+      // Clean thinking process logs if model outputs them
+      content = content.replace(/^Here's a thinking process:[\s\S]*?(?=\n\n|\n[A-Z#*])/i, '').trim();
+    }
+
+    return content;
   }
 
   private async callGeminiDirect(
@@ -125,7 +138,6 @@ export class MultiTierModelGateway {
     messages: ChatMessage[],
     apiKey: string
   ): Promise<string | null> {
-    // Ensure alternating user/model contents for Gemini
     const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
     
     for (const m of messages) {
@@ -133,7 +145,6 @@ export class MultiTierModelGateway {
       if (!m.content || !m.content.trim()) continue;
 
       if (contents.length > 0 && contents[contents.length - 1].role === gRole) {
-        // Merge consecutive messages from same role to prevent Gemini 400 alternating error
         contents[contents.length - 1].parts[0].text += `\n\n${m.content}`;
       } else {
         contents.push({ role: gRole, parts: [{ text: m.content }] });
@@ -145,7 +156,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(6500),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -153,7 +164,7 @@ export class MultiTierModelGateway {
           contents,
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 2500
+            maxOutputTokens: 2000
           }
         })
       }
