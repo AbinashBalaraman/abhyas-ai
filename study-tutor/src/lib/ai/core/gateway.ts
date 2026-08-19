@@ -30,29 +30,33 @@ export class MultiTierModelGateway {
   async executeChat(
     messages: ChatMessage[],
     systemPrompt: string,
-    preferredModel: string = 'deepseek-v4-flash-free'
+    preferredModel: string = 'gemini-3.6-flash'
   ): Promise<{ text: string; tierUsed: ModelTier; provider: string }> {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
     const modelKey = preferredModel.toLowerCase();
 
-    // 1. If explicit Gemini requested or OpenCode unavailable, use Gemini
-    if ((modelKey.includes('gemini') || !openCodeKey) && geminiKey) {
+    // 1. Primary: Gemini 3.6 Flash / Gemini 2.5 Flash
+    if (geminiKey) {
       const geminiBreaker = this.breakers.get('gemini-direct')!;
       if (geminiBreaker.isAvailable()) {
-        try {
-          const res = await this.callGeminiDirect('gemini-2.5-flash', systemPrompt, messages, geminiKey);
-          if (res) {
-            geminiBreaker.recordSuccess();
-            return { text: res, tierUsed: 'TIER2_GEMINI', provider: 'gemini-2.5-flash' };
+        const geminiModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+        for (const gm of geminiModels) {
+          try {
+            const res = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
+            if (res) {
+              geminiBreaker.recordSuccess();
+              return { text: res, tierUsed: 'TIER2_GEMINI', provider: gm };
+            }
+          } catch (e) {
+            // try next gemini model
           }
-        } catch (e) {
-          geminiBreaker.recordFailure();
         }
+        geminiBreaker.recordFailure();
       }
     }
 
-    // 2. Tier 1: OpenCode Models (DeepSeek v4 Flash -> Mimo 2.5)
+    // 2. Tier 2: OpenCode Models (DeepSeek v4 Flash -> Mimo 2.5)
     const tier1Breaker = this.breakers.get('opencode-deepseek')!;
     if (tier1Breaker.isAvailable() && openCodeKey) {
       const initialModel = modelKey.includes('mimo') ? 'mimo-v2.5-free' : 'deepseek-v4-flash-free';
@@ -72,26 +76,10 @@ export class MultiTierModelGateway {
       tier1Breaker.recordFailure();
     }
 
-    // 3. Tier 2: Escalate to Gemini
-    if (geminiKey) {
-      const geminiBreaker = this.breakers.get('gemini-direct')!;
-      if (geminiBreaker.isAvailable()) {
-        try {
-          const res = await this.callGeminiDirect('gemini-2.5-flash', systemPrompt, messages, geminiKey);
-          if (res) {
-            geminiBreaker.recordSuccess();
-            return { text: res, tierUsed: 'TIER2_GEMINI', provider: 'gemini-2.5-flash-escalated' };
-          }
-        } catch (e) {
-          geminiBreaker.recordFailure();
-        }
-      }
-    }
-
-    // 4. Tier 3: Context-aware fallback response
+    // 3. Tier 3: Context-aware fallback response
     const lastUserMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
     return {
-      text: `I received your message regarding "${lastUserMsg}". What specific aspect would you like to explore (e.g. concepts, official dates, formulas, or practice questions)?`,
+      text: `I received your message regarding "${lastUserMsg}". What specific aspect would you like to explore (e.g. key concepts, official dates, formulas, or practice questions)?`,
       tierUsed: 'TIER3_SAFE_MODE',
       provider: 'fallback'
     };
@@ -145,7 +133,6 @@ export class MultiTierModelGateway {
     messages: ChatMessage[],
     apiKey: string
   ): Promise<string | null> {
-    // Format contents for Gemini multi-turn
     const contents = messages.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
@@ -156,7 +143,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(7000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]

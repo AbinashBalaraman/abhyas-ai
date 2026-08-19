@@ -41,13 +41,13 @@ export class MasterSupervisorOrchestrator {
    * Main Conversational Master Agent Pipeline:
    * 1. Load multi-turn conversation memory
    * 2. Dynamically execute factual tools when specific data is requested
-   * 3. Let Master LLM speak naturally like a human tutor
+   * 3. Let Master LLM speak naturally like an expert human tutor
    * 4. Save turn to memory
    */
   async process(
     userPrompt: string,
     sessionId: string = 'default',
-    preferredModel: string = 'deepseek-v4-flash-free'
+    preferredModel: string = 'gemini-3.6-flash'
   ): Promise<{ response: string; sources: Source[] }> {
     const cleanPrompt = userPrompt.trim();
 
