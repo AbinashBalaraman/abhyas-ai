@@ -1,0 +1,111 @@
+# ====================================================================
+# Git Ignore - Abhyas AI Platform
+# ====================================================================
+
+# --------------------------------------------------------------------
+# 1. Raw Source PDF Archives & Intermediate Extraction Artifacts
+# --------------------------------------------------------------------
+boooks/
+books/_raw_text/
+books_raw_text/
+books/_analysis/
+books/_gap_reports/
+books/_gap_content/
+books/_qa_reports/
+books/_index/
+books_analysis/
+RRB_Raw_Materials/
+Phase1B-Reasoning-Analysis/
+Phase1B-Reasoning-Extracted/
+_extracted/
+extracted/
+_tools/
+tools/
+Instructions.md
+implementation.md
+subagents.md
+PROJECT_COMPLETION_REPORT.md
+continue.md
+pro.md
+*.exe
+*.dll
+*.so
+*.dylib
+*.pdf
+
+# --------------------------------------------------------------------
+# 2. Local OCR Utility Scripts
+# --------------------------------------------------------------------
+continue_ocr_to_ocr3.py
+convert_pdfs.py
+delete_duplicates.py
+filter_readable_pdfs.py
+identify_image_pdfs.py
+identify_image_pdfs_optimized.py
+move_readable_to_ocr3.py
+ocr_image_pdfs.py
+ocr_remaining_pdfs.py
+ocr_remaining_to_ocr3.py
+recheck_and_move_pdfs.py
+
+# --------------------------------------------------------------------
+# 3. Node & Next.js Build Outputs & Dependencies
+# --------------------------------------------------------------------
+node_modules/
+study-tutor/node_modules/
+.next/
+study-tutor/.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# --------------------------------------------------------------------
+# 4. Python Virtual Environments & Bytecode
+# --------------------------------------------------------------------
+server_venv/
+venv/
+env/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# --------------------------------------------------------------------
+# 5. Environment Variables & Secret Files
+# --------------------------------------------------------------------
+.env
+.env.*
+.env.local
+.env*.local
+*.pem
+*.key
+*.cert
+*.pfx
+
+# --------------------------------------------------------------------
+# 6. Local Runtime Indexes & Logs
+# --------------------------------------------------------------------
+*.log
+*.err
+*.done
+tutor_faiss.index
+*.sqlite
+*.sqlite3
+
+# --------------------------------------------------------------------
+# 7. IDE, Editor, & Agent Local Workspaces
+# --------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+.agent/
+.agentMemory/
+.clinerules/
+.kilocode/
+.roo/

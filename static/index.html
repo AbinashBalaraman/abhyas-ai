@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor — Interactive Study Portal</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Markdown Parser (Marked.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- LaTeX Rendering (KaTeX) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-graduation-cap logo-icon"></i>
+                    <span>AI Tutor</span>
+                </div>
+                <div class="status-indicator" id="server-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#chat" class="nav-item" data-tab="chat">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Chat Tutor</span>
+                </a>
+                <a href="#library" class="nav-item" data-tab="library">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Library</span>
+                </a>
+                <a href="#quiz" class="nav-item" data-tab="quiz">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span>Quiz Center</span>
+                </a>
+                <a href="#flashcards" class="nav-item" data-tab="flashcards">
+                    <i class="fa-solid fa-rectangle-list"></i>
+                    <span>Flashcards</span>
+                </a>
+                <a href="#planner" class="nav-item" data-tab="planner">
+                    <i class="fa-solid fa-calendar-alt"></i>
+                    <span>Study Planner</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <p>Local Specialist Edition</p>
+                <small>Powered by Open SLMs</small>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- Tab: Dashboard -->
+            <section id="dashboard-tab" class="tab-content active">
+                <header class="tab-header">
+                    <h1>Welcome Back, Aspirant</h1>
+                    <p>Track your preparation goals across RRB, SSC, and Banking exams.</p>
+                </header>
+                
+                <div class="dashboard-grid">
+                    <!-- Progress Card -->
+                    <div class="dashboard-card glass-panel progress-card">
+                        <h3><i class="fa-solid fa-circle-notch icon-purple"></i> Course Completion</h3>
+                        <div class="progress-circle-container">
+                            <svg class="progress-ring" width="120" height="120">
+                                <circle class="progress-ring-circle-bg" stroke="#1f2937" stroke-width="10" fill="transparent" r="50" cx="60" cy="60"/>
+                                <circle class="progress-ring-circle" id="overall-progress-ring" stroke="var(--accent-emerald)" stroke-width="10" fill="transparent" r="50" cx="60" cy="60"/>
+                            </svg>
+                            <div class="progress-value" id="progress-percent-val">0%</div>
+                        </div>
+                        <p class="stats-text" id="progress-chapters-count">0 of 0 Chapters completed</p>
+                    </div>
+
+                    <!-- Exam Quick Select -->
+                    <div class="dashboard-card glass-panel quick-links-card">
+                        <h3><i class="fa-solid fa-bolt icon-gold"></i> Quick Study Tip</h3>
+                        <div class="tip-container">
+                            <p class="tip-text">"Make sure to test yourself on <strong>Number System</strong> shortcuts. Cyclicity of remainders appears in nearly all SSC CGL and RRB NTPC papers!"</p>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="window.location.hash='#chat'; document.querySelector('[data-tab=chat]').click();"><i class="fa-solid fa-comments"></i> Ask Tutor</button>
+                            <button class="btn btn-secondary" onclick="window.location.hash='#library'; document.querySelector('[data-tab=library]').click();"><i class="fa-solid fa-book-open"></i> Browse Chapters</button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="dashboard-card glass-panel double-width activity-card">
+                        <h3><i class="fa-solid fa-clock-rotate-left icon-blue"></i> Subject Mastery</h3>
+                        <div class="subject-stats-list" id="subject-stats-container">
+                            <!-- Populated dynamically -->
+                            <p class="placeholder-text">Loading subject-wise metrics...</p>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Score Progress Chart -->
+                    <div class="dashboard-card glass-panel double-width chart-card">
+                        <h3><i class="fa-solid fa-chart-line icon-purple"></i> Weekly Quiz Score Progress</h3>
+                        <div class="chart-container-svg" id="weekly-chart-container">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tab: Chat Tutor -->
+            <section id="chat-tab" class="tab-content">
+                <header class="tab-header flex-header">
+                    <div>
+                        <h1>AI Chat Tutor</h1>
+                        <p>Ask questions grounded directly in your syllabus and textbook materials. Zero hallucinations.</p>
+                    </div>
+                    <div class="header-control-box">
+                        <label for="chat-model-select"><i class="fa-solid fa-robot"></i> AI Model:</label>
+                        <select id="chat-model-select" class="header-select">
+                            <option value="gemini-2.5-flash" selected>Google Gemini 2.5 Flash (recommended)</option>
+                            <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+                            <option value="gemini-2.0-flash">Google Gemini 2.0 Flash</option>
+                            <option value="deepseek-free">DeepSeek v4 Flash (OpenCode)</option>
+                            <option value="mimo-free">Mimo v2.5 (OpenCode)</option>
+                            <option value="ollama">Local Ollama (Qwen 2.5)</option>
+                            <option value="mistral">Mistral Large (Fallback)</option>
+                        </select>
+                    </div>
+                </header>
+                
+                <div class="chat-container glass-panel">
+                    <!-- Chat Messages Viewport -->
+                    <div class="chat-viewport" id="chat-viewport">
+                        <div class="message message-system">
+                            <div class="message-bubble">
+                                Hello! I am your local AI Tutor. Ask me any question about Quantitative Aptitude, Reasoning, English, General Science, or Banking GK. I will retrieve relevant parts from your course material and cite the sources.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Thinking / Loading Indicator -->
+                    <div class="thinking-loader" id="chat-loader">
+                        <span class="pulse-dot"></span>
+                        <span class="pulse-dot"></span>
+                        <span class="pulse-dot"></span>
+                        <span class="loader-text">AI is retrieving knowledge and writing answer...</span>
+                    </div>
+
+                    <!-- Chat Input Panel -->
+                    <div class="chat-input-panel">
+                        <textarea id="chat-input" placeholder="Type your query here (e.g. explain Simple vs Compound Interest differences...)" rows="1"></textarea>
+                        <button id="btn-stop-chat" class="btn btn-icon btn-stop" style="display:none;" title="Stop"><i class="fa-solid fa-stop"></i></button>
+                        <button id="btn-send-chat" class="btn btn-icon"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tab: Library Browser -->
+            <section id="library-tab" class="tab-content">
+                <header class="tab-header">
+                    <h1>Curriculum Library</h1>
+                    <p>Select a subject and browse your comprehensive study chapters.</p>
+                </header>
+                
+                <div class="library-container">
+                    <!-- Sidebar list of subjects and chapters -->
+                    <div class="library-nav glass-panel">
+                        <h3>Subjects</h3>
+                        <div class="subject-list" id="library-subjects">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <h3 class="margin-top-md">Chapters</h3>
+                        <div class="chapter-list-sidebar" id="library-chapters">
+                            <p class="placeholder-text">Select a subject first...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Chapter content reader -->
+                    <div class="chapter-viewer-container glass-panel">
+                        <div class="viewer-header" id="viewer-header">
+                            <div class="title-section">
+                                <h2 id="viewer-chapter-title">Select a Chapter</h2>
+                                <span class="badge" id="viewer-subject-badge" style="display:none;">Quant</span>
+                            </div>
+                            <div class="viewer-actions" id="viewer-actions" style="display:none;">
+                                <button class="btn btn-secondary btn-sm" id="btn-mark-completed"><i class="fa-solid fa-check"></i> Mark Complete</button>
+                                <button class="btn btn-primary btn-sm" id="btn-start-chapter-quiz"><i class="fa-solid fa-file-signature"></i> Take Quiz</button>
+                            </div>
+                        </div>
+                        <div class="viewer-body markdown-body" id="viewer-body">
+                            <div class="empty-viewer-state">
+                                <i class="fa-solid fa-book-open-reader"></i>
+                                <p>Select a subject on the left, then click a chapter to start reading.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tab: Quiz Center -->
+            <section id="quiz-tab" class="tab-content">
+                <header class="tab-header">
+                    <h1>Quiz Center</h1>
+                    <p>Practice multiple-choice questions extracted dynamically from your study textbooks.</p>
+                </header>
+                
+                <div class="quiz-container">
+                    <!-- Quiz Selector Sidebar -->
+                    <div class="quiz-selector glass-panel">
+                        <h3>Select Quiz Topic</h3>
+                        <div class="form-group">
+                            <label for="quiz-subject-select">Subject</label>
+                            <select id="quiz-subject-select" class="form-control">
+                                <option value="">-- Choose Subject --</option>
+                            </select>
+                        </div>
+                        <div class="form-group margin-top-sm">
+                            <label for="quiz-chapter-select">Chapter</label>
+                            <select id="quiz-chapter-select" class="form-control" disabled>
+                                <option value="">-- Choose Chapter --</option>
+                            </select>
+                        </div>
+                        <button id="btn-start-quiz" class="btn btn-primary btn-full margin-top-md" disabled><i class="fa-solid fa-play"></i> Start Quiz</button>
+                    </div>
+
+                    <!-- Interactive Quiz Box -->
+                    <div class="quiz-box glass-panel" id="quiz-box">
+                        <div class="empty-quiz-state" id="quiz-empty-state">
+                            <i class="fa-solid fa-clipboard-question"></i>
+                            <p>Choose a subject and chapter on the left, then click <strong>Start Quiz</strong>.</p>
+                        </div>
+                        
+                        <!-- Active Quiz State (Hidden by default) -->
+                        <div class="active-quiz-content" id="active-quiz-content" style="display:none;">
+                            <div class="quiz-progress-bar">
+                                <div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%;"></div>
+                            </div>
+                            <div class="quiz-header">
+                                <span class="question-number" id="quiz-question-num">Question 1 of 5</span>
+                                <span class="quiz-timer" id="quiz-timer"><i class="fa-solid fa-stopwatch"></i> Target: 45s</span>
+                            </div>
+                            <div class="quiz-body">
+                                <h3 class="question-text" id="quiz-question-text">Sample Question Text?</h3>
+                                <div class="quiz-options-list" id="quiz-options-container">
+                                    <!-- Options populated dynamically -->
+                                </div>
+                            </div>
+                            
+                            <!-- Solution Area (Shown after submitting) -->
+                            <div class="quiz-explanation-box" id="quiz-explanation-box" style="display:none;">
+                                <h4 id="explanation-title"><i class="fa-solid fa-circle-check"></i> Correct Solution</h4>
+                                <div class="explanation-text" id="quiz-explanation-text">Detailed step-by-step solution logic.</div>
+                            </div>
+
+                            <div class="quiz-footer">
+                                <button class="btn btn-secondary" id="btn-submit-answer" disabled>Submit Answer</button>
+                                <button class="btn btn-primary" id="btn-next-question" style="display:none;">Next Question</button>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Completed Score State (Hidden by default) -->
+                        <div class="quiz-result-content" id="quiz-result-content" style="display:none;">
+                            <i class="fa-solid fa-trophy trophy-icon"></i>
+                            <h2>Quiz Completed!</h2>
+                            <p class="score-summary">You scored <strong id="quiz-score-final">0</strong> out of <strong id="quiz-total-final">5</strong></p>
+                            <p class="feedback-text" id="quiz-feedback-text">Good effort! Keep reviewing the chapter formulas to improve speed.</p>
+                            <div class="result-actions">
+                                <button class="btn btn-primary" id="btn-quiz-retry"><i class="fa-solid fa-rotate-right"></i> Retry Quiz</button>
+                                <button class="btn btn-secondary" onclick="window.location.hash='#library'; document.querySelector('[data-tab=library]').click();"><i class="fa-solid fa-book-open"></i> Review Chapter</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Tab: Flashcards -->
+            <section id="flashcards-tab" class="tab-content">
+                <header class="tab-header flex-header">
+                    <div>
+                        <h1>Dynamic Flashcards</h1>
+                        <p>Memorize critical formulas, key terms, and shortcuts. Swipe or click to flip the card.</p>
+                    </div>
+                    <div class="header-control-box">
+                        <label for="flashcard-subject-select"><i class="fa-solid fa-filter"></i> Subject:</label>
+                        <select id="flashcard-subject-select" class="header-select">
+                            <option value="all">All Subjects</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </header>
+
+                <div class="flashcards-container">
+                    <div class="flashcard-deck">
+                        <div class="flashcard" id="active-flashcard">
+                            <div class="flashcard-inner">
+                                <div class="flashcard-front">
+                                    <div class="card-subject" id="card-subject-label">QUANT</div>
+                                    <div class="card-question" id="card-question-text">Question loading...</div>
+                                    <div class="card-hint">Click or press Space to reveal answer</div>
+                                </div>
+                                <div class="flashcard-back">
+                                    <div class="card-subject">ANSWER</div>
+                                    <div class="card-answer" id="card-answer-text">Answer loading...</div>
+                                    <div class="card-actions">
+                                        <button class="btn btn-secondary btn-sm" id="btn-card-mastered"><i class="fa-solid fa-circle-check"></i> Got it! (Mastered)</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="deck-controls">
+                        <button class="btn btn-secondary" id="btn-prev-card"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+                        <span class="deck-progress" id="deck-progress-text">0 / 0</span>
+                        <button class="btn btn-secondary" id="btn-next-card-deck">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                    
+                    <div class="mastery-summary glass-panel margin-top-md">
+                        <h4><i class="fa-solid fa-award icon-gold"></i> Mastery Overview</h4>
+                        <div class="mastery-bar-container">
+                            <div class="mastery-bar-fill" id="mastery-progress-bar" style="width: 0%;"></div>
+                        </div>
+                        <p class="mastery-details" id="mastery-details-text">You have mastered 0 out of 0 concepts.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab: Study Planner -->
+            <section id="planner-tab" class="tab-content">
+                <header class="tab-header flex-header">
+                    <div>
+                        <h1>Study Planner</h1>
+                        <p>Generate a customized, weekly preparation schedule optimized for your target exam and weaker concepts.</p>
+                    </div>
+                    <div class="header-control-box">
+                        <label for="planner-model-select"><i class="fa-solid fa-robot"></i> AI Model:</label>
+                        <select id="planner-model-select" class="header-select">
+                            <option value="gemini-2.5-flash" selected>Google Gemini 2.5 Flash (recommended)</option>
+                            <option value="gemini-2.5-pro">Google Gemini 2.5 Pro</option>
+                            <option value="gemini-2.0-flash">Google Gemini 2.0 Flash</option>
+                            <option value="deepseek-free">DeepSeek v4 Flash (OpenCode)</option>
+                            <option value="mimo-free">Mimo v2.5 (OpenCode)</option>
+                            <option value="ollama">Local Ollama (Qwen 2.5)</option>
+                            <option value="mistral">Mistral Large (Fallback)</option>
+                        </select>
+                    </div>
+                </header>
+                
+                <div class="planner-layout">
+                    <!-- Config Form -->
+                    <div class="planner-config glass-panel">
+                        <h3>Plan Parameters</h3>
+                        <div class="form-group">
+                            <label for="planner-exam">Target Competitive Exam</label>
+                            <select id="planner-exam" class="form-control">
+                                <option value="SSC CGL (Tier 1 & 2)">SSC CGL</option>
+                                <option value="RRB NTPC">RRB NTPC</option>
+                                <option value="IBPS PO / SBI PO">Bank PO (IBPS/SBI)</option>
+                                <option value="RBI Grade B">RBI Grade B Officer</option>
+                                <option value="RRB ALP & Technician">RRB ALP / Technician</option>
+                            </select>
+                        </div>
+                        <div class="form-group margin-top-sm">
+                            <label for="planner-weakness">Weak Subjects / Topics</label>
+                            <textarea id="planner-weakness" class="form-control" rows="3" placeholder="e.g. Syllogisms, Profit & Loss shortcuts, NCERT physics numericals"></textarea>
+                        </div>
+                        <button id="btn-generate-plan" class="btn btn-primary btn-full margin-top-md"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Study Plan</button>
+                    </div>
+
+                    <!-- Plan Display -->
+                    <div class="planner-display glass-panel" id="planner-display-box">
+                        <div class="empty-planner-state" id="planner-empty-state">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                            <p>Fill out the parameters on the left and click <strong>Generate Study Plan</strong> to structure your schedule.</p>
+                        </div>
+
+                        <!-- Thinking state -->
+                        <div class="thinking-loader" id="planner-loader" style="display:none;">
+                            <span class="pulse-dot"></span>
+                            <span class="pulse-dot"></span>
+                            <span class="pulse-dot"></span>
+                            <span class="loader-text">AI is mapping syllabus timelines and weak areas...</span>
+                        </div>
+
+                        <!-- Generated Plan Viewer -->
+                        <div class="plan-viewer markdown-body" id="plan-viewer" style="display:none;">
+                            <!-- Output goes here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+        </main>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,976 @@
+{
+  "metadata": {
+    "title": "Indian Competitive Exams - Complete Study Guide",
+    "version": "3.0 - Phase 3 Complete (OCR/ocr2 Integration)",
+    "generated_date": "2026-06-21",
+    "total_chapters": 98,
+    "total_words": 700692,
+    "total_size_mb": 3.93,
+    "purpose": "AI Chatbot Training Data + Student Self-Study",
+    "anti_hallucination_policy": "Every fact sourced; [BOOK]/[NCERT]/[WEB]/[PYQ] tags used; no training-data invention",
+    "recent_changes": [
+      "Added 1,185 PDFs from OCR/ and ocr2/ folders (extracted 2026-06-21)",
+      "Created new chapter: Quantitative_Aptitude/23_Data_Sufficiency.md",
+      "Created new chapter: Reasoning_Ability/16_Input_Output_Machines.md",
+      "Created new chapter: Computer_Aptitude/01_Computer_Fundamentals_History.md (was missing)",
+      "Fixed Banking/07_Insurance_Pension.md: NPS subscriber + IRDAI Chair corrections",
+      "Added Supplementary Material sections to 34 chapters (722 PDFs integrated)",
+      "Generated 1,185 structured MD files for sort/filter workflow",
+      "Created 8 special-category summary files in _practice_sets/"
+    ]
+  },
+  "totals": {
+    "chapters_generated": 98,
+    "by_subject": {
+      "Banking_Financial_Awareness": 10,
+      "Computer_Aptitude": 6,
+      "English_Language": 12,
+      "General_Awareness": 13,
+      "General_Science": 15,
+      "Quantitative_Aptitude": 25,
+      "Reasoning_Ability": 17
+    },
+    "by_quality": {
+      "Gold": 43,
+      "Silver": 32,
+      "Bronze": 23,
+      "Compact": 0,
+      "Stub": 0
+    },
+    "ocr_ocr2_integration": {
+      "total_source_pdfs": 1185,
+      "routed_to_chapters": 722,
+      "integrated_as_supplementary": 722,
+      "practice_set_summaries": 8,
+      "structured_md_files": 1185
+    }
+  },
+  "subjects": {
+    "Banking_Financial_Awareness": {
+      "chapters": 10,
+      "word_count": 23885,
+      "chapters_list": [
+        "01_Banking_Basics_RBI.md",
+        "02_Banking_Types_Acts.md",
+        "03_Monetary_Policy_Rates.md",
+        "04_Digital_Banking_Payment.md",
+        "05_Financial_Markets_Basel.md",
+        "06_Loans_NPA.md",
+        "07_Insurance_Pension.md",
+        "08_International_Finance.md",
+        "09_Regulators.md",
+        "10_Govt_Schemes.md"
+      ]
+    },
+    "Computer_Aptitude": {
+      "chapters": 6,
+      "word_count": 20782,
+      "chapters_list": [
+        "01_Computer_Fundamentals_History.md",
+        "02_Hardware_Software.md",
+        "03_Networking_Internet.md",
+        "04_MS_Office_Database.md",
+        "05_Cyber_Security_Number_Systems.md",
+        "06_Emerging_Tech.md"
+      ]
+    },
+    "English_Language": {
+      "chapters": 12,
+      "word_count": 84555,
+      "chapters_list": [
+        "01_Grammar_Tenses_Voice.md",
+        "02_Error_Spotting_Sentence_Improvement.md",
+        "03_Vocabulary_Synonyms_Antonyms_Idioms.md",
+        "04_Reading_Comprehension.md",
+        "05_Cloze_Test_Fill_Blanks.md",
+        "06_Articles_Prepositions.md",
+        "07_SubjectVerbAgreement_Tenses.md",
+        "08_Narration_Voice_ActivePassive.md",
+        "09_ParaJumbles_Rearrangement.md",
+        "10_OneWord_Substitution_Spelling.md",
+        "11_Idioms_Phrases_Proverbs.md",
+        "12_Spelling_Punctuation_Abbreviations.md"
+      ]
+    },
+    "General_Awareness": {
+      "chapters": 13,
+      "word_count": 51725,
+      "chapters_list": [
+        "01_Indian_History.md",
+        "02_Indian_Polity_Constitution.md",
+        "03_Geography.md",
+        "04_Indian_Economy.md",
+        "05_General_Science_Recap.md",
+        "06_Static_GK_Awards_Sports_Books.md",
+        "07_Art_Culture_World_Geography.md",
+        "08_Current_Affairs_2025_26.md",
+        "09_Ancient_Indian_History.md",
+        "10_Medieval_Indian_History.md",
+        "11_Modern_Indian_History.md",
+        "14_Static_GK_Master.md",
+        "15_Current_Affairs_2025_H2.md"
+      ]
+    },
+    "General_Science": {
+      "chapters": 15,
+      "word_count": 70225,
+      "chapters_list": [
+        "01_Physics_Mechanics.md",
+        "02_Chemistry_Basics.md",
+        "03_Biology_HumanBody.md",
+        "04_Physics_Light_Optics.md",
+        "05_Physics_Electricity.md",
+        "06_Physics_MagneticEffects.md",
+        "07_Physics_Motion_Force.md",
+        "08_Physics_Heat_Wave.md",
+        "09_Chemistry_AcidsBasesSalts.md",
+        "10_Chemistry_MetalsNonmetals.md",
+        "11_Chemistry_CarbonCompounds.md",
+        "12_Chemistry_PeriodicTable.md",
+        "13_Biology_LifeProcesses.md",
+        "14_Biology_Reproduction_Heredity.md",
+        "15_Biology_HumanBody_Health.md"
+      ]
+    },
+    "Quantitative_Aptitude": {
+      "chapters": 25,
+      "word_count": 326401,
+      "chapters_list": [
+        "01_Number_System.md",
+        "02_Percentage.md",
+        "03_Profit_Loss_Discount.md",
+        "04_Simple_Compound_Interest.md",
+        "05_Ratio_Proportion_Mixture.md",
+        "06_Time_Work_Pipes.md",
+        "07_Time_Speed_Distance.md",
+        "08_Average_Ages_Partnership.md",
+        "09_Algebra_Equations.md",
+        "10_Geometry_Triangles_Circles.md",
+        "11_Mensuration_2D_3D.md",
+        "12_Trigonometry_Heights_Distances.md",
+        "13_Statistics_Probability.md",
+        "14_Data_Interpretation.md",
+        "15_Number_Series.md",
+        "16_Permutation_Combination.md",
+        "17_Set_Theory.md",
+        "18_Probability_Advanced.md",
+        "19_Coordinate_Geometry.md",
+        "20_Trigonometry_Advanced.md",
+        "21_Geometry_Advanced.md",
+        "22_Quant_Mixed_Practice.md",
+        "23_Data_Sufficiency.md",
+        "24_Permutation_Combination_Advanced.md",
+        "25_Data_Interpretation_Advanced.md"
+      ]
+    },
+    "Reasoning_Ability": {
+      "chapters": 17,
+      "word_count": 123119,
+      "chapters_list": [
+        "01_Analogy_Classification.md",
+        "02_Coding_Decoding.md",
+        "03_Blood_Relations_Direction.md",
+        "04_Syllogism_Venn.md",
+        "05_Seating_Puzzles.md",
+        "06_Inequalities_InputOutput.md",
+        "07_Statement_Conclusion_DataSufficiency.md",
+        "08_Clocks_Calendars_Cubes.md",
+        "09_NonVerbal_Reasoning.md",
+        "10_Logical_Deductions.md",
+        "11_Order_Ranking_Direction.md",
+        "12_Mathematical_Operations.md",
+        "13_Embedded_Figures_Cubes.md",
+        "14_Verbal_Reasoning_Advanced.md",
+        "15_Reasoning_Mixed_Practice.md",
+        "16_Input_Output_Machines.md",
+        "17_Critical_Reasoning.md"
+      ]
+    }
+  },
+  "chapters_list": [
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\01_Banking_Basics_RBI.md",
+      "topic": "Banking Basics RBI",
+      "word_count": 3484,
+      "quality": "Silver",
+      "size_kb": 23
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\02_Banking_Types_Acts.md",
+      "topic": "Banking Types Acts",
+      "word_count": 3145,
+      "quality": "Silver",
+      "size_kb": 20
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\03_Monetary_Policy_Rates.md",
+      "topic": "Monetary Policy Rates",
+      "word_count": 2993,
+      "quality": "Bronze",
+      "size_kb": 19
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\04_Digital_Banking_Payment.md",
+      "topic": "Digital Banking Payment",
+      "word_count": 2650,
+      "quality": "Bronze",
+      "size_kb": 16
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\05_Financial_Markets_Basel.md",
+      "topic": "Financial Markets Basel",
+      "word_count": 2697,
+      "quality": "Bronze",
+      "size_kb": 19
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\06_Loans_NPA.md",
+      "topic": "Loans NPA",
+      "word_count": 1840,
+      "quality": "Bronze",
+      "size_kb": 11
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\07_Insurance_Pension.md",
+      "topic": "Insurance Pension",
+      "word_count": 1811,
+      "quality": "Bronze",
+      "size_kb": 12
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\08_International_Finance.md",
+      "topic": "International Finance",
+      "word_count": 1837,
+      "quality": "Bronze",
+      "size_kb": 13
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\09_Regulators.md",
+      "topic": "Regulators",
+      "word_count": 1648,
+      "quality": "Bronze",
+      "size_kb": 11
+    },
+    {
+      "subject": "Banking_Financial_Awareness",
+      "file": "books\\Banking_Financial_Awareness\\10_Govt_Schemes.md",
+      "topic": "Govt Schemes",
+      "word_count": 1780,
+      "quality": "Bronze",
+      "size_kb": 11
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\01_Computer_Fundamentals_History.md",
+      "topic": "Computer Fundamentals History",
+      "word_count": 5202,
+      "quality": "Gold",
+      "size_kb": 32
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\02_Hardware_Software.md",
+      "topic": "Hardware Software",
+      "word_count": 2997,
+      "quality": "Bronze",
+      "size_kb": 18
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\03_Networking_Internet.md",
+      "topic": "Networking Internet",
+      "word_count": 2876,
+      "quality": "Bronze",
+      "size_kb": 16
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\04_MS_Office_Database.md",
+      "topic": "MS Office Database",
+      "word_count": 3244,
+      "quality": "Silver",
+      "size_kb": 20
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\05_Cyber_Security_Number_Systems.md",
+      "topic": "Cyber Security Number Systems",
+      "word_count": 3460,
+      "quality": "Silver",
+      "size_kb": 22
+    },
+    {
+      "subject": "Computer_Aptitude",
+      "file": "books\\Computer_Aptitude\\06_Emerging_Tech.md",
+      "topic": "Emerging Tech",
+      "word_count": 3003,
+      "quality": "Silver",
+      "size_kb": 18
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\01_Grammar_Tenses_Voice.md",
+      "topic": "Grammar Tenses Voice",
+      "word_count": 8379,
+      "quality": "Gold",
+      "size_kb": 50
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\02_Error_Spotting_Sentence_Improvement.md",
+      "topic": "Error Spotting Sentence Improvement",
+      "word_count": 9863,
+      "quality": "Gold",
+      "size_kb": 61
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\03_Vocabulary_Synonyms_Antonyms_Idioms.md",
+      "topic": "Vocabulary Synonyms Antonyms Idioms",
+      "word_count": 14003,
+      "quality": "Gold",
+      "size_kb": 93
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\04_Reading_Comprehension.md",
+      "topic": "Reading Comprehension",
+      "word_count": 9129,
+      "quality": "Gold",
+      "size_kb": 60
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\05_Cloze_Test_Fill_Blanks.md",
+      "topic": "Cloze Test Fill Blanks",
+      "word_count": 8765,
+      "quality": "Gold",
+      "size_kb": 55
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\06_Articles_Prepositions.md",
+      "topic": "Articles Prepositions",
+      "word_count": 4437,
+      "quality": "Silver",
+      "size_kb": 25
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\07_SubjectVerbAgreement_Tenses.md",
+      "topic": "SubjectVerbAgreement Tenses",
+      "word_count": 4128,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\08_Narration_Voice_ActivePassive.md",
+      "topic": "Narration Voice ActivePassive",
+      "word_count": 3423,
+      "quality": "Silver",
+      "size_kb": 19
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\09_ParaJumbles_Rearrangement.md",
+      "topic": "ParaJumbles Rearrangement",
+      "word_count": 5657,
+      "quality": "Gold",
+      "size_kb": 35
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\10_OneWord_Substitution_Spelling.md",
+      "topic": "OneWord Substitution Spelling",
+      "word_count": 5155,
+      "quality": "Gold",
+      "size_kb": 27
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\11_Idioms_Phrases_Proverbs.md",
+      "topic": "Idioms Phrases Proverbs",
+      "word_count": 4675,
+      "quality": "Silver",
+      "size_kb": 23
+    },
+    {
+      "subject": "English_Language",
+      "file": "books\\English_Language\\12_Spelling_Punctuation_Abbreviations.md",
+      "topic": "Spelling Punctuation Abbreviations",
+      "word_count": 6941,
+      "quality": "Gold",
+      "size_kb": 44
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\01_Indian_History.md",
+      "topic": "Indian History",
+      "word_count": 4025,
+      "quality": "Silver",
+      "size_kb": 27
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\02_Indian_Polity_Constitution.md",
+      "topic": "Indian Polity Constitution",
+      "word_count": 4262,
+      "quality": "Silver",
+      "size_kb": 26
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\03_Geography.md",
+      "topic": "Geography",
+      "word_count": 4986,
+      "quality": "Silver",
+      "size_kb": 32
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\04_Indian_Economy.md",
+      "topic": "Indian Economy",
+      "word_count": 4952,
+      "quality": "Silver",
+      "size_kb": 31
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\05_General_Science_Recap.md",
+      "topic": "General Science Recap",
+      "word_count": 6194,
+      "quality": "Gold",
+      "size_kb": 39
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\06_Static_GK_Awards_Sports_Books.md",
+      "topic": "Static GK Awards Sports Books",
+      "word_count": 5752,
+      "quality": "Gold",
+      "size_kb": 35
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\07_Art_Culture_World_Geography.md",
+      "topic": "Art Culture World Geography",
+      "word_count": 5114,
+      "quality": "Gold",
+      "size_kb": 32
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\08_Current_Affairs_2025_26.md",
+      "topic": "Current Affairs 2025 26",
+      "word_count": 3621,
+      "quality": "Silver",
+      "size_kb": 22
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\09_Ancient_Indian_History.md",
+      "topic": "Ancient Indian History",
+      "word_count": 2309,
+      "quality": "Bronze",
+      "size_kb": 15
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\10_Medieval_Indian_History.md",
+      "topic": "Medieval Indian History",
+      "word_count": 2265,
+      "quality": "Bronze",
+      "size_kb": 14
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\11_Modern_Indian_History.md",
+      "topic": "Modern Indian History",
+      "word_count": 2660,
+      "quality": "Bronze",
+      "size_kb": 16
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\14_Static_GK_Master.md",
+      "topic": "Static GK Master",
+      "word_count": 3678,
+      "quality": "Silver",
+      "size_kb": 19
+    },
+    {
+      "subject": "General_Awareness",
+      "file": "books\\General_Awareness\\15_Current_Affairs_2025_H2.md",
+      "topic": "Current Affairs 2025 H2",
+      "word_count": 1907,
+      "quality": "Bronze",
+      "size_kb": 12
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\01_Physics_Mechanics.md",
+      "topic": "Physics Mechanics",
+      "word_count": 4807,
+      "quality": "Silver",
+      "size_kb": 25
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\02_Chemistry_Basics.md",
+      "topic": "Chemistry Basics",
+      "word_count": 3662,
+      "quality": "Silver",
+      "size_kb": 22
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\03_Biology_HumanBody.md",
+      "topic": "Biology HumanBody",
+      "word_count": 3307,
+      "quality": "Silver",
+      "size_kb": 21
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\04_Physics_Light_Optics.md",
+      "topic": "Physics Light Optics",
+      "word_count": 7103,
+      "quality": "Gold",
+      "size_kb": 39
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\05_Physics_Electricity.md",
+      "topic": "Physics Electricity",
+      "word_count": 5544,
+      "quality": "Gold",
+      "size_kb": 30
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\06_Physics_MagneticEffects.md",
+      "topic": "Physics MagneticEffects",
+      "word_count": 5577,
+      "quality": "Gold",
+      "size_kb": 32
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\07_Physics_Motion_Force.md",
+      "topic": "Physics Motion Force",
+      "word_count": 5426,
+      "quality": "Gold",
+      "size_kb": 30
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\08_Physics_Heat_Wave.md",
+      "topic": "Physics Heat Wave",
+      "word_count": 5053,
+      "quality": "Gold",
+      "size_kb": 29
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\09_Chemistry_AcidsBasesSalts.md",
+      "topic": "Chemistry AcidsBasesSalts",
+      "word_count": 4647,
+      "quality": "Silver",
+      "size_kb": 26
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\10_Chemistry_MetalsNonmetals.md",
+      "topic": "Chemistry MetalsNonmetals",
+      "word_count": 4830,
+      "quality": "Silver",
+      "size_kb": 27
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\11_Chemistry_CarbonCompounds.md",
+      "topic": "Chemistry CarbonCompounds",
+      "word_count": 3946,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\12_Chemistry_PeriodicTable.md",
+      "topic": "Chemistry PeriodicTable",
+      "word_count": 4150,
+      "quality": "Silver",
+      "size_kb": 23
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\13_Biology_LifeProcesses.md",
+      "topic": "Biology LifeProcesses",
+      "word_count": 3535,
+      "quality": "Silver",
+      "size_kb": 22
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\14_Biology_Reproduction_Heredity.md",
+      "topic": "Biology Reproduction Heredity",
+      "word_count": 3962,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "General_Science",
+      "file": "books\\General_Science\\15_Biology_HumanBody_Health.md",
+      "topic": "Biology HumanBody Health",
+      "word_count": 4676,
+      "quality": "Silver",
+      "size_kb": 31
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\01_Number_System.md",
+      "topic": "Number System",
+      "word_count": 18992,
+      "quality": "Gold",
+      "size_kb": 104
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\02_Percentage.md",
+      "topic": "Percentage",
+      "word_count": 22357,
+      "quality": "Gold",
+      "size_kb": 130
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\03_Profit_Loss_Discount.md",
+      "topic": "Profit Loss Discount",
+      "word_count": 17028,
+      "quality": "Gold",
+      "size_kb": 100
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\04_Simple_Compound_Interest.md",
+      "topic": "Simple Compound Interest",
+      "word_count": 14586,
+      "quality": "Gold",
+      "size_kb": 84
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\05_Ratio_Proportion_Mixture.md",
+      "topic": "Ratio Proportion Mixture",
+      "word_count": 64081,
+      "quality": "Gold",
+      "size_kb": 345
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\06_Time_Work_Pipes.md",
+      "topic": "Time Work Pipes",
+      "word_count": 15936,
+      "quality": "Gold",
+      "size_kb": 88
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\07_Time_Speed_Distance.md",
+      "topic": "Time Speed Distance",
+      "word_count": 15101,
+      "quality": "Gold",
+      "size_kb": 85
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\08_Average_Ages_Partnership.md",
+      "topic": "Average Ages Partnership",
+      "word_count": 54675,
+      "quality": "Gold",
+      "size_kb": 309
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\09_Algebra_Equations.md",
+      "topic": "Algebra Equations",
+      "word_count": 12520,
+      "quality": "Gold",
+      "size_kb": 59
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\10_Geometry_Triangles_Circles.md",
+      "topic": "Geometry Triangles Circles",
+      "word_count": 15511,
+      "quality": "Gold",
+      "size_kb": 90
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\11_Mensuration_2D_3D.md",
+      "topic": "Mensuration 2D 3D",
+      "word_count": 4264,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\12_Trigonometry_Heights_Distances.md",
+      "topic": "Trigonometry Heights Distances",
+      "word_count": 12628,
+      "quality": "Gold",
+      "size_kb": 75
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\13_Statistics_Probability.md",
+      "topic": "Statistics Probability",
+      "word_count": 12878,
+      "quality": "Gold",
+      "size_kb": 70
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\14_Data_Interpretation.md",
+      "topic": "Data Interpretation",
+      "word_count": 8721,
+      "quality": "Gold",
+      "size_kb": 53
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\15_Number_Series.md",
+      "topic": "Number Series",
+      "word_count": 10723,
+      "quality": "Gold",
+      "size_kb": 58
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\16_Permutation_Combination.md",
+      "topic": "Permutation Combination",
+      "word_count": 2166,
+      "quality": "Bronze",
+      "size_kb": 13
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\17_Set_Theory.md",
+      "topic": "Set Theory",
+      "word_count": 4304,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\18_Probability_Advanced.md",
+      "topic": "Probability Advanced",
+      "word_count": 2125,
+      "quality": "Bronze",
+      "size_kb": 13
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\19_Coordinate_Geometry.md",
+      "topic": "Coordinate Geometry",
+      "word_count": 2496,
+      "quality": "Bronze",
+      "size_kb": 13
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\20_Trigonometry_Advanced.md",
+      "topic": "Trigonometry Advanced",
+      "word_count": 1978,
+      "quality": "Bronze",
+      "size_kb": 12
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\21_Geometry_Advanced.md",
+      "topic": "Geometry Advanced",
+      "word_count": 2287,
+      "quality": "Bronze",
+      "size_kb": 13
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\22_Quant_Mixed_Practice.md",
+      "topic": "Quant Mixed Practice",
+      "word_count": 1871,
+      "quality": "Bronze",
+      "size_kb": 10
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\23_Data_Sufficiency.md",
+      "topic": "Data Sufficiency",
+      "word_count": 4196,
+      "quality": "Silver",
+      "size_kb": 24
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\24_Permutation_Combination_Advanced.md",
+      "topic": "Permutation Combination Advanced",
+      "word_count": 2812,
+      "quality": "Bronze",
+      "size_kb": 15
+    },
+    {
+      "subject": "Quantitative_Aptitude",
+      "file": "books\\Quantitative_Aptitude\\25_Data_Interpretation_Advanced.md",
+      "topic": "Data Interpretation Advanced",
+      "word_count": 2165,
+      "quality": "Bronze",
+      "size_kb": 12
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\01_Analogy_Classification.md",
+      "topic": "Analogy Classification",
+      "word_count": 11883,
+      "quality": "Gold",
+      "size_kb": 70
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\02_Coding_Decoding.md",
+      "topic": "Coding Decoding",
+      "word_count": 7850,
+      "quality": "Gold",
+      "size_kb": 44
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\03_Blood_Relations_Direction.md",
+      "topic": "Blood Relations Direction",
+      "word_count": 9573,
+      "quality": "Gold",
+      "size_kb": 53
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\04_Syllogism_Venn.md",
+      "topic": "Syllogism Venn",
+      "word_count": 7865,
+      "quality": "Gold",
+      "size_kb": 45
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\05_Seating_Puzzles.md",
+      "topic": "Seating Puzzles",
+      "word_count": 15003,
+      "quality": "Gold",
+      "size_kb": 76
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\06_Inequalities_InputOutput.md",
+      "topic": "Inequalities InputOutput",
+      "word_count": 8286,
+      "quality": "Gold",
+      "size_kb": 42
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\07_Statement_Conclusion_DataSufficiency.md",
+      "topic": "Statement Conclusion DataSufficiency",
+      "word_count": 5945,
+      "quality": "Gold",
+      "size_kb": 34
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\08_Clocks_Calendars_Cubes.md",
+      "topic": "Clocks Calendars Cubes",
+      "word_count": 9507,
+      "quality": "Gold",
+      "size_kb": 49
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\09_NonVerbal_Reasoning.md",
+      "topic": "NonVerbal Reasoning",
+      "word_count": 7386,
+      "quality": "Gold",
+      "size_kb": 43
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\10_Logical_Deductions.md",
+      "topic": "Logical Deductions",
+      "word_count": 6776,
+      "quality": "Gold",
+      "size_kb": 40
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\11_Order_Ranking_Direction.md",
+      "topic": "Order Ranking Direction",
+      "word_count": 8064,
+      "quality": "Gold",
+      "size_kb": 44
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\12_Mathematical_Operations.md",
+      "topic": "Mathematical Operations",
+      "word_count": 4230,
+      "quality": "Silver",
+      "size_kb": 21
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\13_Embedded_Figures_Cubes.md",
+      "topic": "Embedded Figures Cubes",
+      "word_count": 6810,
+      "quality": "Gold",
+      "size_kb": 40
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\14_Verbal_Reasoning_Advanced.md",
+      "topic": "Verbal Reasoning Advanced",
+      "word_count": 4530,
+      "quality": "Silver",
+      "size_kb": 26
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\15_Reasoning_Mixed_Practice.md",
+      "topic": "Reasoning Mixed Practice",
+      "word_count": 4053,
+      "quality": "Silver",
+      "size_kb": 22
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\16_Input_Output_Machines.md",
+      "topic": "Input Output Machines",
+      "word_count": 2128,
+      "quality": "Bronze",
+      "size_kb": 11
+    },
+    {
+      "subject": "Reasoning_Ability",
+      "file": "books\\Reasoning_Ability\\17_Critical_Reasoning.md",
+      "topic": "Critical Reasoning",
+      "word_count": 3230,
+      "quality": "Silver",
+      "size_kb": 20
+    }
+  ]
+}

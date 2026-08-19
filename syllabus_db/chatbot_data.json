@@ -1,0 +1,404 @@
+{
+  "metadata": {
+    "title": "Indian Competitive Exams - Complete Syllabus Database",
+    "version": "1.0",
+    "generated_date": "2026-06-17",
+    "total_exams_covered": "200+",
+    "total_files": 64,
+    "total_words": "~250000",
+    "purpose": "AI Chatbot Training Data for Indian Competitive Exam Preparation"
+  },
+  "categories": {
+    "SSC": {
+      "full_name": "Staff Selection Commission",
+      "total_exams": 11,
+      "primary_website": "https://ssc.nic.in/",
+      "exams": [
+        {
+          "id": "SSC_CGL",
+          "name": "SSC CGL (Combined Graduate Level)",
+          "posts": ["AAO", "ASO", "Inspector", "Auditor", "Tax Assistant", "JSO"],
+          "eligibility": {
+            "qualification": "Bachelor's Degree",
+            "age_min": 18,
+            "age_max": 32,
+            "citizenship": "Indian"
+          },
+          "exam_pattern": [
+            {"stage": "Tier-I (Prelims)", "subjects": ["General Intelligence", "General Awareness", "Quant", "English"], "questions": 100, "marks": 200, "duration_min": 60, "negative_marking": 0.5},
+            {"stage": "Tier-II (Mains)", "papers": ["Quant", "English", "Statistics", "Finance"], "marks": 450, "duration_min": 180, "negative_marking": 1.0},
+            {"stage": "Tier-III (Descriptive)", "type": "Essay/Letter", "marks": 200}
+          ],
+          "syllabus": {
+            "quant": ["Number System", "Algebra", "Geometry", "Trigonometry", "Mensuration", "Data Interpretation"],
+            "english": ["Grammar", "Vocabulary", "Comprehension", "Writing Skills"],
+            "reasoning": ["Analogies", "Coding", "Puzzles", "Syllogism", "Venn"],
+            "awareness": ["History", "Polity", "Geography", "Economics", "Science", "Current Affairs"],
+            "statistics": ["Probability", "Sampling", "Correlation", "Regression"],
+            "finance": ["Indian Economy", "Accounting", "Auditing", "Banking"]
+          },
+          "salary": "Rs 25,500 - 1,51,100 (Pay Level 4-8)",
+          "file_path": "SSC/01_SSC_CGL.md"
+        },
+        {
+          "id": "SSC_CHSL",
+          "name": "SSC CHSL (Combined Higher Secondary Level)",
+          "posts": ["LDC", "JSA", "PA", "SA", "DEO", "DEO Grade A"],
+          "eligibility": {"qualification": "12th Pass", "age_min": 18, "age_max": 27},
+          "file_path": "SSC/02_SSC_CHSL.md"
+        },
+        {
+          "id": "SSC_MTS",
+          "name": "SSC MTS & Havaldar",
+          "posts": ["Multi Tasking Staff", "Havaldar"],
+          "eligibility": {"qualification": "10th Pass", "age_min": 18, "age_max": 27},
+          "file_path": "SSC/03_SSC_MTS_Havaldar.md"
+        },
+        {
+          "id": "SSC_CPO",
+          "name": "SSC CPO (Central Police Organisation)",
+          "posts": ["SI in CAPF", "SI in Delhi Police"],
+          "eligibility": {"qualification": "Bachelor's Degree", "age_min": 20, "age_max": 25},
+          "file_path": "SSC/04_SSC_CPO.md"
+        },
+        {
+          "id": "SSC_GD",
+          "name": "SSC GD Constable",
+          "posts": ["Constable GD", "Rifleman"],
+          "eligibility": {"qualification": "10th Pass", "age_min": 18, "age_max": 23},
+          "file_path": "SSC/05_SSC_GD_Constable.md"
+        },
+        {
+          "id": "SSC_JE",
+          "name": "SSC JE (Junior Engineer)",
+          "posts": ["JE Civil", "JE Electrical", "JE Mechanical"],
+          "eligibility": {"qualification": "Diploma/B.E./B.Tech", "age_min": 18, "age_max": 32},
+          "file_path": "SSC/06_SSC_JE.md"
+        },
+        {
+          "id": "SSC_Steno",
+          "name": "SSC Stenographer Grade C & D",
+          "posts": ["Stenographer Grade C", "Stenographer Grade D"],
+          "eligibility": {"qualification": "12th Pass", "age_min": 18, "age_max": 30},
+          "file_path": "SSC/07_SSC_Stenographer.md"
+        },
+        {
+          "id": "SSC_Selection",
+          "name": "SSC Selection Posts",
+          "posts": ["Various Group B & C"],
+          "eligibility": {"qualification": "10th/12th/Graduation", "age_min": 18, "age_max": 30},
+          "file_path": "SSC/08_SSC_Selection_Posts.md"
+        },
+        {
+          "id": "SSC_JHT",
+          "name": "SSC JHT (Junior Hindi Translator)",
+          "posts": ["JHT", "JTO", "SHT"],
+          "eligibility": {"qualification": "Master's in Hindi", "age_min": 18, "age_max": 30},
+          "file_path": "SSC/09_SSC_JHT_Other_Exams.md"
+        },
+        {
+          "id": "SSC_Other",
+          "name": "SSC Head Constable AWO/TPO & Other Posts",
+          "posts": ["HC AWO", "HC TPO", "Scientific Assistant", "SI NCB"],
+          "eligibility": {"qualification": "12th/Graduation", "age_min": 18, "age_max": 30},
+          "file_path": "SSC/10_SSC_Other_Exams_HeadConstable_SA.md"
+        },
+        {
+          "id": "SSC_DP_Constable",
+          "name": "SSC Delhi Police Constable (Executive)",
+          "posts": ["Constable Executive Male", "Constable Executive Female"],
+          "eligibility": {"qualification": "12th Pass", "age_min": 18, "age_max": 25},
+          "file_path": "SSC/11_SSC_Delhi_Police_Constable.md"
+        }
+      ]
+    },
+    "RRB": {
+      "full_name": "Railway Recruitment Board",
+      "total_exams": 11,
+      "primary_website": "https://www.rrbcdg.gov.in/",
+      "exams": [
+        {
+          "id": "RRB_NTPC",
+          "name": "RRB NTPC",
+          "posts": ["Station Master", "Goods Guard", "Commercial Apprentice", "Senior Clerk", "Junior Clerk"],
+          "eligibility": {"qualification": "12th Pass/Degree", "age_min": 18, "age_max": 33},
+          "file_path": "RRB/01_RRB_NTPC.md"
+        },
+        {
+          "id": "RRB_GroupD",
+          "name": "RRB Group D (Level 1)",
+          "posts": ["Track Maintainer", "Helper", "Assistant Pointsman"],
+          "eligibility": {"qualification": "10th Pass/ITI", "age_min": 18, "age_max": 33},
+          "file_path": "RRB/02_RRB_Group_D.md"
+        },
+        {
+          "id": "RRB_JE",
+          "name": "RRB JE (Junior Engineer)",
+          "posts": ["JE Civil", "JE Mechanical", "JE Electrical", "DMS", "CMA"],
+          "eligibility": {"qualification": "Diploma/B.E./B.Tech", "age_min": 18, "age_max": 33},
+          "file_path": "RRB/03_RRB_JE.md"
+        },
+        {
+          "id": "RRB_ALP",
+          "name": "RRB ALP (Assistant Loco Pilot)",
+          "posts": ["ALP", "Loco Pilot", "Motor Car Driver"],
+          "eligibility": {"qualification": "10th + ITI/Diploma/Degree", "age_min": 18, "age_max": 28},
+          "file_path": "RRB/04_RRB_ALP.md"
+        },
+        {
+          "id": "RRB_Technician",
+          "name": "RRB Technician",
+          "posts": ["Technician Grade I (Signal)", "Technician Grade III"],
+          "eligibility": {"qualification": "10th + ITI/Diploma/Degree", "age_min": 18, "age_max": 33},
+          "file_path": "RRB/05_RRB_Technician.md"
+        },
+        {
+          "id": "RPF",
+          "name": "RPF Constable & Sub-Inspector",
+          "posts": ["Constable (Executive)", "SI (Executive)"],
+          "eligibility": {"qualification": "10th/Bachelor's", "age_min": 18, "age_max": 25},
+          "file_path": "RRB/06_RPF_Constable_SI.md"
+        },
+        {
+          "id": "RRB_Ministerial_Paramedical",
+          "name": "RRB Ministerial & Paramedical",
+          "posts": ["Stenographer", "Teacher", "Staff Nurse", "Pharmacist", "Health Inspector"],
+          "eligibility": {"qualification": "10th/12th/Graduation/Medical", "age_min": 18, "age_max": 33},
+          "file_path": "RRB/07_RRB_Ministerial_Paramedical.md"
+        },
+        {
+          "id": "Metro_Rail",
+          "name": "Metro Rail (DMRC, BMRCL, NMRC, etc.)",
+          "posts": ["JE", "Maintainer", "Station Controller", "Train Operator"],
+          "eligibility": {"qualification": "ITI/Diploma/Degree", "age_min": 18, "age_max": 30},
+          "file_path": "RRB/08_Metro_Rail_Other_Railway.md"
+        },
+        {
+          "id": "RRB_SSE",
+          "name": "RRB Section Engineer (SSE)",
+          "posts": ["SSE Civil", "SSE Mechanical", "SSE Electrical", "SSE S&T"],
+          "eligibility": {"qualification": "B.E./B.Tech/Diploma + Exp", "age_min": 20, "age_max": 34},
+          "file_path": "RRB/09_RRB_Section_Engineer_Technical.md"
+        },
+        {
+          "id": "Railway_PSUs",
+          "name": "Railway PSUs (RITES, IRCON, DFCCIL, RVNL, IRCTC)",
+          "posts": ["Engineer", "Manager", "Site Supervisor"],
+          "eligibility": {"qualification": "Diploma/Degree", "age_min": 21, "age_max": 32},
+          "file_path": "RRB/10_Railway_PSUs_Other_Exams.md"
+        },
+        {
+          "id": "RRB_Paramedical_Technical",
+          "name": "RRB Paramedical Technical Categories",
+          "posts": ["Staff Nurse", "Pharmacist", "Lab Superintendent", "Radiographer"],
+          "eligibility": {"qualification": "GNM/B.Sc. Nursing/D.Pharm/B.Pharm/DMLT/BMLT", "age_min": 18, "age_max": 40},
+          "file_path": "RRB/11_RRB_Paramedical_Technical.md"
+        }
+      ]
+    },
+    "Banking": {
+      "full_name": "Banking Exams (PSU Banks, RBI, NABARD, SEBI)",
+      "total_exams": 13,
+      "primary_website": "https://www.ibps.in/",
+      "exams": [
+        {
+          "id": "IBPS_PO",
+          "name": "IBPS PO",
+          "posts": ["Probationary Officer"],
+          "eligibility": {"qualification": "Bachelor's Degree", "age_min": 20, "age_max": 30},
+          "salary": "Rs 41,960 - 1,46,950 + Allowances",
+          "file_path": "Banking/01_IBPS_PO.md"
+        },
+        {
+          "id": "IBPS_Clerk",
+          "name": "IBPS Clerk",
+          "posts": ["Clerk / Junior Associate"],
+          "eligibility": {"qualification": "Bachelor's Degree", "age_min": 20, "age_max": 28},
+          "file_path": "Banking/02_IBPS_Clerk.md"
+        },
+        {
+          "id": "IBPS_RRB",
+          "name": "IBPS RRB (4 posts)",
+          "posts": ["Office Assistant", "Officer Scale I", "Officer Scale II", "Officer Scale III"],
+          "eligibility": {"qualification": "Bachelor's Degree + Exp", "age_min": 18, "age_max": 40},
+          "file_path": "Banking/03_IBPS_RRB.md"
+        },
+        {
+          "id": "IBPS_SO",
+          "name": "IBPS SO (7 Specialist Posts)",
+          "posts": ["IT Officer", "AFO", "Law Officer", "HR Officer", "Marketing Officer", "Rajbhasha", "Treasury Manager"],
+          "eligibility": {"qualification": "Bachelor's/Master's/Professional", "age_min": 20, "age_max": 30},
+          "file_path": "Banking/04_IBPS_SO.md"
+        },
+        {
+          "id": "SBI_PO",
+          "name": "SBI PO",
+          "posts": ["Probationary Officer"],
+          "eligibility": {"qualification": "Bachelor's Degree", "age_min": 21, "age_max": 30},
+          "salary": "Rs 41,960 - 1,46,950 + In-hand ~Rs 60,000",
+          "file_path": "Banking/05_SBI_PO.md"
+        },
+        {
+          "id": "SBI_Clerk",
+          "name": "SBI Clerk & Apprentice",
+          "posts": ["Junior Associate", "Apprentice"],
+          "eligibility": {"qualification": "Bachelor's Degree", "age_min": 20, "age_max": 28},
+          "file_path": "Banking/06_SBI_Clerk_Apprentice.md"
+        },
+        {
+          "id": "SBI_SO",
+          "name": "SBI SO & CBO",
+          "posts": ["SO IT", "SO Law", "SO HR", "SO Marketing", "CBO"],
+          "eligibility": {"qualification": "Bachelor's/Master's", "age_min": 21, "age_max": 30},
+          "file_path": "Banking/07_SBI_SO_Specialist.md"
+        },
+        {
+          "id": "RBI_GradeB",
+          "name": "RBI Grade B Officer",
+          "posts": ["Officer Grade B DR"],
+          "eligibility": {"qualification": "Master's/B.E./PhD/CA", "age_min": 21, "age_max": 30},
+          "salary": "Basic Rs 55,200 + In-hand ~Rs 1,00,000+",
+          "file_path": "Banking/08_RBI_Grade_B.md"
+        },
+        {
+          "id": "RBI_Assistant",
+          "name": "RBI Assistant & Other RBI",
+          "posts": ["Assistant", "Grade A (DEPR/DSIM)", "Medical Officer", "Security Officer"],
+          "eligibility": {"qualification": "Bachelor's/Postgraduate", "age_min": 20, "age_max": 35},
+          "file_path": "Banking/09_RBI_Assistant_Other_RBI.md"
+        },
+        {
+          "id": "NABARD_SIDBI",
+          "name": "NABARD / SIDBI / IDBI / IPPB",
+          "posts": ["Grade A AM", "Grade B Manager", "IPPB Officer"],
+          "eligibility": {"qualification": "Bachelor's/PG", "age_min": 21, "age_max": 32},
+          "file_path": "Banking/10_NABARD_SIDBI_IDBI_IPPB.md"
+        },
+        {
+          "id": "SEBI_Regulators",
+          "name": "SEBI / PFRDA / IBBI / NISM / IIBF / CFA",
+          "posts": ["Grade A Officer", "Grade B Manager"],
+          "eligibility": {"qualification": "Master's/Professional", "age_min": 18, "age_max": 30},
+          "file_path": "Banking/11_Sebi_PFRDA_IBBI_Other_Regulators.md"
+        },
+        {
+          "id": "IFSCA_Grade_A",
+          "name": "IFSCA Grade A (Assistant Manager)",
+          "posts": ["Officer Grade A Assistant Manager"],
+          "eligibility": {"qualification": "Master's/Law/Engineering/CA/CFA", "age_min": 21, "age_max": 30},
+          "file_path": "Banking/12_IFSCA_Grade_A.md"
+        },
+        {
+          "id": "IBPS_RRB_Scale_II_III",
+          "name": "IBPS RRB Officer Scale II & Scale III",
+          "posts": ["General Banking Officer", "Specialist Officers", "Senior Manager"],
+          "eligibility": {"qualification": "Bachelor's Degree + Experience", "age_min": 21, "age_max": 40},
+          "file_path": "Banking/13_IBPS_RRB_Scale_II_III.md"
+        }
+      ]
+    },
+    "Insurance": {
+      "full_name": "Insurance Companies (LIC, NIACL, GIC, OICL, NIC, AIC)",
+      "total_exams": 9,
+      "primary_website": "https://www.licindia.in/",
+      "exams": [
+        {"id": "LIC_AAO", "name": "LIC AAO & ADO", "posts": ["AAO Generalist/Specialist", "ADO"], "eligibility": {"qualification": "Bachelor's/Master's", "age_min": 18, "age_max": 30}, "file_path": "Insurance/01_LIC_AAO_ADO.md"},
+        {"id": "NIACL_UIIC", "name": "NIACL & UIIC AO/Assistant", "posts": ["AO Scale I", "Assistant"], "eligibility": {"qualification": "Bachelor's", "age_min": 21, "age_max": 30}, "file_path": "Insurance/02_NIACL_UIIC.md"},
+        {"id": "GIC_EPFO_ESIC", "name": "GIC, EPFO, ESIC", "posts": ["GIC AO", "EPFO SSA", "ESIC SSO/UDC"], "eligibility": {"qualification": "12th/Graduation", "age_min": 18, "age_max": 30}, "file_path": "Insurance/03_GIC_EPFO_ESIC.md"},
+        {"id": "OICL_NIC_AIC", "name": "OICL, NIC, AIC, IRDA", "posts": ["AO", "Management Trainee", "Grade A"], "eligibility": {"qualification": "Bachelor's/PG", "age_min": 21, "age_max": 30}, "file_path": "Insurance/04_OICL_NIC_AIC.md"},
+        {"id": "IPPB_Post_GDS", "name": "IPPB, India Post, GDS", "posts": ["IPPB Assistant", "Postman", "Mail Guard", "GDS BPM/ABPM"], "eligibility": {"qualification": "10th/12th/Graduation", "age_min": 18, "age_max": 40}, "file_path": "Insurance/05_IPPB_Post_GDS.md"},
+        {"id": "PSU_Banks", "name": "PSU Banks (BOB, PNB, Canara, Indian)", "posts": ["SO", "PO", "Clerk"], "eligibility": {"qualification": "Bachelor's", "age_min": 21, "age_max": 35}, "file_path": "Insurance/06_PSU_Bank_Other_Banks.md"},
+        {"id": "EXIM_NHB_FCI", "name": "EXIM, NHB, FCI, Coal India", "posts": ["Officer", "Manager", "Assistant Grade III"], "eligibility": {"qualification": "Bachelor's/Engineering", "age_min": 18, "age_max": 30}, "file_path": "Insurance/07_EXIM_NHB_FCI_Coal.md"},
+        {"id": "Central_PSUs", "name": "ONGC, BHEL, IOCL, NTPC, GAIL, SAIL", "posts": ["Graduate Trainee", "Engineer", "MT"], "eligibility": {"qualification": "B.E./B.Tech 60%", "age_min": 18, "age_max": 30}, "file_path": "Insurance/08_Other_PSUs_Central.md"},
+        {"id": "RBI_NABARD_Special", "name": "RBI Grade C, NABARD IT, BoI PO, SPMCIL", "posts": ["Manager", "Specialist Officer"], "eligibility": {"qualification": "Bachelor's/PG", "age_min": 18, "age_max": 35}, "file_path": "Insurance/09_RBI_NABARD_Other_Specialized.md"}
+      ]
+    },
+    "UPSC": {
+      "full_name": "Union Public Service Commission",
+      "total_exams": 4,
+      "primary_website": "https://www.upsc.gov.in/",
+      "exams": [
+        {"id": "UPSC_CSE", "name": "UPSC Civil Services (IAS/IPS/IFS)", "posts": ["IAS", "IPS", "IFS", "IRS", "IA&AS", "All 24 Services"], "eligibility": {"qualification": "Bachelor's Degree", "age_min": 21, "age_max": 32}, "salary": "Rs 56,100 - 2,50,000", "file_path": "UPSC/01_UPSC_CSE_IAS.md"},
+        {"id": "UPSC_CAPF_CDS_NDA", "name": "UPSC CAPF / CDS / NDA", "posts": ["Assistant Commandant", "IMA/INA/AFA/OTA", "NDA Cadets"], "eligibility": {"qualification": "12th/Graduation", "age_min": 16.5, "age_max": 24}, "file_path": "UPSC/02_UPSC_CAPF_CDS_NDA.md"},
+        {"id": "UPSC_EPFO_IES_IFoS_CMS", "name": "UPSC EPFO / IES / IFoS / CMS", "posts": ["EO/AO", "IES", "IFoS Officer", "Medical Officer"], "eligibility": {"qualification": "Master's/MBBS/Bachelor's", "age_min": 18, "age_max": 32}, "file_path": "UPSC/03_UPSC_EPFO_IES_IFoS_CMS.md"},
+        {"id": "UPSC_Other", "name": "UPSC IES, Geo-Scientist, SO, ASO", "posts": ["IES", "Geo-Scientist", "Section Officer", "ASO", "Stenographer"], "eligibility": {"qualification": "Bachelor's/Master's", "age_min": 18, "age_max": 30}, "file_path": "UPSC/04_UPSC_Other_Exams.md"}
+      ]
+    },
+    "Defence": {
+      "full_name": "Indian Army / Navy / Air Force / CAPF",
+      "total_exams": 5,
+      "primary_website": "https://joinindianarmy.nic.in/",
+      "exams": [
+        {"id": "Indian_Army", "name": "Indian Army Entries", "posts": ["NDA", "CDS", "TES", "SSC Tech", "JAG", "AMC", "ACC"], "file_path": "Defence/01_Indian_Army.md"},
+        {"id": "Indian_Navy_AirForce", "name": "Indian Navy & Air Force Entries", "posts": ["NDA", "CDS", "INET", "AFCAT", "Airmen", "Agniveer"], "file_path": "Defence/02_Indian_Navy_AirForce.md"},
+        {"id": "SSB_Defence", "name": "SSB Interview Process & Other", "posts": ["SSB Interview", "Agniveer", "Coast Guard"], "file_path": "Defence/03_SSB_Other_Defence_Exams.md"},
+        {"id": "CAPF", "name": "CAPF (BSF/CISF/CRPF/ITBP/SSB/Assam Rifles)", "posts": ["Constable", "HC", "SI", "AC", "Tradesman"], "file_path": "Defence/04_CAPF_BSF_CRPF_Other.md"},
+        {"id": "MHA_CBI_NIA", "name": "MHA/CBI/NIA/IB/Security", "posts": ["IB ACIO", "CBI SI", "NIA SI", "BPR&D", "AAIB"], "file_path": "Defence/05_MHA_CBI_NIA_Other_Security.md"}
+      ]
+    },
+    "State": {
+      "full_name": "State Govt Exams (PSC, Police, Patwari, Judiciary, PSU)",
+      "total_exams": 5,
+      "primary_website": "https://uppsc.up.nic.in/",
+      "exams": [
+        {"id": "State_PSC", "name": "State PSC (28 States)", "posts": ["Deputy Collector", "SDM", "DSP", "Tehsildar", "BDO"], "eligibility": {"qualification": "Bachelor's", "age_min": 21, "age_max": 40}, "file_path": "State/01_State_PSC_Exams.md"},
+        {"id": "State_Police_Patwari", "name": "State Police/Patwari/Group D/Forest Guard (25 states)", "posts": ["Constable", "SI", "Patwari", "Lekhpal", "Group D", "Forest Guard"], "file_path": "State/02_State_Police_Patwari_Other.md"},
+        {"id": "Judicial", "name": "Judicial Services (22 High Courts)", "posts": ["Civil Judge (JD)", "JMFC", "Metropolitan Magistrate"], "eligibility": {"qualification": "LLB (3/5 years)", "age_min": 21, "age_max": 35}, "file_path": "State/03_Judicial_Exams.md"},
+        {"id": "Delhi", "name": "Delhi Police/DSSSB/Delhi Fire/Delhi Jail", "posts": ["Constable", "HC", "SI", "Fireman", "DSSSB"], "file_path": "State/04_Delhi_Police_DSSSB_Delhi_Exams.md"},
+        {"id": "State_PSU_Electricity", "name": "State PSU/Electricity/Transport (24 states)", "posts": ["AE", "JE", "Technician", "Driver", "Conductor"], "file_path": "State/05_State_PSU_Electricity_Other.md"}
+      ]
+    },
+    "Teaching": {
+      "full_name": "Teaching & Research Exams",
+      "total_exams": 2,
+      "primary_website": "https://ctet.nic.in/",
+      "exams": [
+        {"id": "CTET_KVS_NVS", "name": "CTET / KVS / NVS / DSSSB / State TETs", "posts": ["PRT", "TGT", "PGT", "Librarian", "Counselor"], "eligibility": {"qualification": "12th + D.Ed / Bachelor's + B.Ed / Master's + B.Ed"}, "file_path": "Teaching/01_CTET_KVS_NVS_DSSSB.md"},
+        {"id": "University_Research", "name": "UGC NET / CSIR NET / GATE / CAT / JEE / NEET / CUET / ICAR", "posts": ["Asst Professor", "JRF", "M.Tech Admissions", "MBA Admissions"], "file_path": "Teaching/02_University_Research_Exams.md"}
+      ]
+    },
+    "Other": {
+      "full_name": "Other Central Govt / Medical / Telecom",
+      "total_exams": 4,
+      "primary_website": "Multiple",
+      "exams": [
+        {"id": "Other_50", "name": "62 Other Central Govt Exams", "posts": ["Income Tax Inspector", "CBIC", "EPFO", "ESIC", "FCI", "CAPF Const", "IB ACIO", "DRDO", "ISRO"], "file_path": "Other/01_50_Other_Government_Exams.md"},
+        {"id": "Misc_Central", "name": "DRDO/ISRO/BARC/SEBI/IBBI/PFRDA/Professional", "posts": ["Scientist B", "Tech Officer", "Professional qualifications"], "file_path": "Other/02_Misc_Central_Exams.md"},
+        {"id": "Nursing_Paramedical", "name": "AIIMS NORCET / JIPMER / PGIMER / NEET PG / State Nursing", "posts": ["Nursing Officer", "Medical Officer", "Paramedical"], "file_path": "Other/03_Nursing_Paramedical_Exams.md"},
+        {"id": "Telecom_IT", "name": "BSNL / MTNL / IT PSUs / Placement Exams", "posts": ["JTO", "Management Trainee", "Software Engineer"], "file_path": "Other/04_Telecom_IT_Exams.md"}
+      ]
+    }
+  },
+  "syllabus_subjects_common": {
+    "Quantitative_Aptitude": ["Number System", "Algebra", "Geometry", "Trigonometry", "Mensuration", "Data Interpretation", "Probability", "Permutation & Combination", "Profit/Loss", "Simple/Compound Interest", "Time & Work", "Time & Distance"],
+    "Reasoning": ["Analogies", "Coding-Decoding", "Blood Relations", "Direction", "Puzzles", "Seating Arrangement", "Syllogism", "Inequalities", "Statement & Conclusion", "Input-Output"],
+    "English_Language": ["Reading Comprehension", "Cloze Test", "Fill in Blanks", "Para Jumbles", "Vocabulary", "Synonyms/Antonyms", "Idioms", "Grammar", "Sentence Correction", "Active/Passive Voice"],
+    "General_Awareness": ["History (India/World)", "Indian Polity", "Geography", "Indian Economy", "Science (Physics/Chemistry/Biology)", "Current Affairs", "Sports", "Awards", "Books & Authors"],
+    "Banking_Awareness": ["RBI Functions", "Banking Terms (NEFT, RTGS, UPI, SWIFT)", "Repo/Reverse Repo Rate", "CRR/SLR", "NPA", "MCLR", "Base Rate", "IMF", "World Bank", "WTO"],
+    "Computer_Knowledge": ["History & Generations", "Memory", "MS Office", "Internet", "Networking", "DBMS", "Cyber Security"]
+  },
+  "salary_pay_levels_7th_CPC": {
+    "Level_1": "Rs 18,000 - 56,900 (Group D)",
+    "Level_2": "Rs 19,900 - 63,200 (Clerical)",
+    "Level_3": "Rs 21,700 - 69,100 (Constable/Clerical)",
+    "Level_4": "Rs 25,500 - 81,100 (UDC/Senior Clerk)",
+    "Level_5": "Rs 29,200 - 92,300 (Stenographer/DEO)",
+    "Level_6": "Rs 35,400 - 1,12,400 (PO/SI/JE)",
+    "Level_7": "Rs 44,900 - 1,42,400 (TGT/Manager)",
+    "Level_8": "Rs 47,600 - 1,51,100 (Section Officer)",
+    "Level_9": "Rs 53,100 - 1,67,800 (Under Secretary)",
+    "Level_10": "Rs 56,100 - 1,77,500 (SO/DSO/CAPF AC)",
+    "Level_11": "Rs 67,700 - 2,08,700 (Deputy Director)",
+    "Level_12": "Rs 78,800 - 2,09,200 (Joint Director)",
+    "Level_13": "Rs 1,23,100 - 2,15,900 (Additional Director)"
+  },
+  "negative_marking": {
+    "SSC": "0.50 (Tier I), 1.0 (Tier II)",
+    "RRB": "1/3 of marks per wrong",
+    "IBPS_PO_Clerk": "0.25 marks per wrong",
+    "SBI_PO": "0.25 marks per wrong",
+    "UPSC_Prelims": "1/3 of marks per wrong",
+    "UPSC_Mains": "No negative marking (Descriptive)",
+    "Banking_Mains": "0.25 to 0.50 per wrong"
+  }
+}
