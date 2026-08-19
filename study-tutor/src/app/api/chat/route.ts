@@ -1,5 +1,5 @@
 import { getAnswer } from '@/lib/ai/rag';
-import { getChatHistory, saveChatMessage } from '@/lib/db';
+import { getChatHistory } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const question = body.question || body.message;
-    const model = body.model || 'deepseek-free';
+    const model = body.model || 'deepseek-v4-flash-free';
     const sessionId = body.sessionId || request.headers.get('x-session-id') || 'default';
     
     if (!question || !question.trim()) {
@@ -30,17 +30,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fetch previous conversation history for multi-turn context
+    // Pass request to the Master Supervisor Multi-Agent Orchestrator
     const history = await getChatHistory(sessionId);
-
-    // Save user message to database isolated by session
-    await saveChatMessage('user', question, [], sessionId);
-
-    // Get answer from RAG with history context
-    const { response, sources } = await getAnswer(question, model, history);
-
-    // Save AI response to database isolated by session
-    await saveChatMessage('ai', response, sources, sessionId);
+    const { response, sources } = await getAnswer(question, model, history, sessionId);
 
     return NextResponse.json({ response, sources, rag_used: !!sources?.length });
   } catch (error: any) {
@@ -51,5 +43,6 @@ export async function POST(request: Request) {
     );
   }
 }
+
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
