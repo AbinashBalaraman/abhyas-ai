@@ -24,8 +24,26 @@ const SUBJECT_MAPPING: Record<string, string> = {
   'Computer_Aptitude': 'Computer Aptitude'
 };
 
+export function getBooksPath(): string {
+  const candidatePaths = [
+    path.join(process.cwd(), '../books'),
+    path.join(process.cwd(), 'books'),
+    path.join(__dirname, '../../../../books'),
+    path.join(__dirname, '../../../books'),
+    path.join(__dirname, '../../books'),
+    path.resolve('../books'),
+    path.resolve('./books'),
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) {
+      return p;
+    }
+  }
+  return path.join(process.cwd(), '../books');
+}
+
 export async function getChapters(): Promise<Chapter[]> {
-  const booksPath = path.join(process.cwd(), '../books');
+  const booksPath = getBooksPath();
   const chapters: Chapter[] = [];
 
   try {
