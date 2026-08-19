@@ -34,23 +34,19 @@ export class MultiTierModelGateway {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
-    // 1. Primary: Gemini 3.6 Flash / Gemini 2.5 Flash
+    // 1. Primary: Gemini 3.6 Flash
     if (geminiKey) {
       const geminiBreaker = this.breakers.get('gemini-direct')!;
       if (geminiBreaker.isAvailable()) {
-        const geminiModels = ['gemini-3.6-flash', 'gemini-2.5-flash'];
-        for (const gm of geminiModels) {
-          try {
-            const res = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
-            if (res) {
-              geminiBreaker.recordSuccess();
-              return { text: res, tierUsed: 'TIER2_GEMINI', provider: gm };
-            }
-          } catch (e) {
-            // try fallback model
+        try {
+          const res = await this.callGeminiDirect('gemini-3.6-flash', systemPrompt, messages, geminiKey);
+          if (res) {
+            geminiBreaker.recordSuccess();
+            return { text: res, tierUsed: 'TIER2_GEMINI', provider: 'gemini-3.6-flash' };
           }
+        } catch (e) {
+          geminiBreaker.recordFailure();
         }
-        geminiBreaker.recordFailure();
       }
     }
 
@@ -75,14 +71,14 @@ export class MultiTierModelGateway {
     // 3. Tier 3: Context-aware fallback response
     const lastUserMsg = messages.filter(m => m.role === 'user').pop()?.content || '';
     return {
-      text: `I received your message regarding "${lastUserMsg}". What specific aspect would you like to explore (e.g. key concepts, official dates, formulas, or practice questions)?`,
+      text: `Regarding "${lastUserMsg}": Would you like me to walk through the core concepts, official exam dates, or practice questions on this?`,
       tierUsed: 'TIER3_SAFE_MODE',
       provider: 'fallback'
     };
   }
 
   /**
-   * Helper for single prompt execution (backwards compatibility)
+   * Helper for single prompt execution
    */
   async execute(
     preferredModel: string,
@@ -109,12 +105,12 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(4500),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
         temperature: 0.4,
-        max_tokens: 1500
+        max_tokens: 1200
       })
     });
 
@@ -129,17 +125,27 @@ export class MultiTierModelGateway {
     messages: ChatMessage[],
     apiKey: string
   ): Promise<string | null> {
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }));
+    // Ensure alternating user/model contents for Gemini
+    const contents: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = [];
+    
+    for (const m of messages) {
+      const gRole = m.role === 'assistant' ? 'model' : 'user';
+      if (!m.content || !m.content.trim()) continue;
+
+      if (contents.length > 0 && contents[contents.length - 1].role === gRole) {
+        // Merge consecutive messages from same role to prevent Gemini 400 alternating error
+        contents[contents.length - 1].parts[0].text += `\n\n${m.content}`;
+      } else {
+        contents.push({ role: gRole, parts: [{ text: m.content }] });
+      }
+    }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(5500),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -147,7 +153,7 @@ export class MultiTierModelGateway {
           contents,
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 1500
+            maxOutputTokens: 1200
           }
         })
       }
