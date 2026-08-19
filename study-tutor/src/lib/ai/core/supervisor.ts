@@ -111,8 +111,9 @@ export class MasterSupervisorOrchestrator {
       }
     }
 
-    // 2. Check if query is asking for subject concepts, formulas, or derivations
-    if (/\b(formula|explain|concept|rule|rules|derive|derivation|theorem|definition|how to solve|difference between|interest|percentage|ratio|algebra|geometry|trigonometry|set theory|venn diagram|syllogism|puzzle|blood relation|grammar|idiom|speed|distance|work|profit|loss|physics|chemistry|biology)\b/i.test(query.toLowerCase())) {
+    // 2. Check if query is asking for subject concepts, formulas, or derivations (unless referring to solving a preceding problem)
+    const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer)\b/i.test(query);
+    if (!isSolvingPrecedingProblem && /\b(formula|explain|concept|rule|rules|derive|derivation|theorem|definition|how to solve|difference between|interest|percentage|ratio|algebra|geometry|trigonometry|set theory|venn diagram|syllogism|puzzle|blood relation|grammar|idiom|speed|distance|work|profit|loss|physics|chemistry|biology)\b/i.test(query.toLowerCase())) {
       const ragWorker = this.registry.getAgent('knowledge_rag');
       if (ragWorker) {
         workerPromises.push(ragWorker.execute({
