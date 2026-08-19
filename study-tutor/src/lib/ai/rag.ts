@@ -1,7 +1,6 @@
 import { getChapters } from '../db';
 import { callLLM, webSearch } from './llm';
 import fs from 'fs';
-import path from 'path';
 
 export interface Source {
   title: string;
@@ -81,7 +80,7 @@ const KEYWORD_SUBJECT_MAP: Record<string, { subject: string; titleKeywords: stri
   'database': { subject: 'Computer_Aptitude', titleKeywords: ['database'] },
 };
 
-function extractRelevantSnippet(content: string, keywords: string[], maxLen: number = 4000): string {
+function extractRelevantSnippet(content: string, keywords: string[], maxLen: number = 3000): string {
   if (content.length <= maxLen) {
     return content;
   }
@@ -265,18 +264,40 @@ export async function findContext(query: string): Promise<{ context: string; sou
   return { context: '', sources: [] };
 }
 
-export async function getAnswer(question: string, model: string = 'deepseek-free') {
-  const { context, sources } = await findContext(question);
+export async function getAnswer(
+  question: string, 
+  model: string = 'deepseek-free',
+  chatHistory: any[] = []
+) {
+  // Multi-turn context resolution: If the question is short/ambiguous, check recent history for exam topic
+  let resolvedQuery = question;
+  const qLower = question.toLowerCase().trim();
+  const recentHistory = chatHistory.slice(-4);
+  const historyText = recentHistory.map(m => m.content || '').join(' ').toLowerCase();
 
-  // Live web search using Gemini's native Google Search grounding
+  if (qLower === 'when next exam' || qLower === 'next exam' || qLower === 'when is next exam' || qLower === 'eligibility' || qLower === 'syllabus') {
+    if (historyText.includes('ibps') || historyText.includes('po') || historyText.includes('bank')) {
+      resolvedQuery = `IBPS PO ${question}`;
+    } else if (historyText.includes('ssc') || historyText.includes('cgl')) {
+      resolvedQuery = `SSC CGL ${question}`;
+    } else if (historyText.includes('rrb') || historyText.includes('ntpc')) {
+      resolvedQuery = `RRB NTPC ${question}`;
+    } else if (historyText.includes('sbi')) {
+      resolvedQuery = `SBI PO ${question}`;
+    }
+  }
+
+  const { context, sources } = await findContext(resolvedQuery);
+
+  // Live web search using Keyless DDG + Gemini
   let webContext = '';
   let webText = '';
   let webSources: Source[] = [];
   try {
-    const web = await webSearch(question);
+    const web = await webSearch(resolvedQuery);
     if (web.text) {
       webText = web.text;
-      webContext = `=== LIVE REAL-TIME GOOGLE SEARCH RESULTS (FETCHED NOW) ===\n${web.text}\n======================================================`;
+      webContext = `=== LIVE REAL-TIME SEARCH RESULTS ===\n${web.text}\n=====================================`;
       webSources = web.sources.map((s) => ({
         title: s.title || s.uri,
         subject: 'Official Web Result',
@@ -305,9 +326,16 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
     day: 'numeric' 
   });
 
+  let historySnippet = '';
+  if (recentHistory.length > 0) {
+    historySnippet = `=== RECENT CONVERSATION ===\n${recentHistory.map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content.substring(0, 200)}`).join('\n')}\n===========================`;
+  }
+
   const systemPrompt = `You are an expert AI Study Tutor for Indian Competitive Exams (SSC CGL/CHSL, RRB NTPC, IBPS/SBI Banking, UPSC, State PSCs).
 CURRENT REAL-WORLD DATE: ${currentDateStr}. Current Year: ${now.getFullYear()}.
 When answering questions regarding upcoming exam notifications, dates, or schedules, anchor your answer relative to ${now.getFullYear()} and the current exam cycle.
+
+${historySnippet}
 
 Answer clearly, concisely, and use Markdown tables and bold text. Keep your answer under 400 words.
 
@@ -330,18 +358,18 @@ ${context || 'No specific textbook chapter context needed for this query.'}
   }
 
   // Graceful intelligent fallback from local curated textbook chapters & exam templates
-  const fallbackAnswer = generateOfflineStudyResponse(question, context, sources);
+  const fallbackAnswer = generateOfflineStudyResponse(resolvedQuery, context, sources, historyText);
   return {
     response: fallbackAnswer,
     sources: [...webSources, ...sources]
   };
 }
 
-function generateOfflineStudyResponse(question: string, context: string, sources: Source[]): string {
+function generateOfflineStudyResponse(question: string, context: string, sources: Source[], historyText: string = ''): string {
   const q = question.toLowerCase();
 
   // SSC CGL Exam Information
-  if (q.includes('ssc') && (q.includes('cgl') || q.includes('exam') || q.includes('pattern') || q.includes('date'))) {
+  if (q.includes('ssc') || ((q.includes('cgl') || q.includes('chsl')) && (q.includes('exam') || q.includes('pattern') || q.includes('date') || q.includes('next')))) {
     return `# 🏛️ SSC CGL Examination Overview & Schedule
 
 ### 📅 Expected Exam Timeline (Annual Cycle)
@@ -368,7 +396,7 @@ function generateOfflineStudyResponse(question: string, context: string, sources
   }
 
   // IBPS PO Exam Information
-  if (q.includes('ibps') || (q.includes('po') && (q.includes('bank') || q.includes('exam')))) {
+  if (q.includes('ibps') || (q.includes('po') && (q.includes('bank') || q.includes('exam') || q.includes('next')))) {
     return `# 🏦 IBPS PO Examination Overview & Schedule
 
 ### 📅 Expected Exam Timeline (Annual Cycle)
@@ -408,6 +436,23 @@ function generateOfflineStudyResponse(question: string, context: string, sources
 
 - **Negative Marking:** $1/3$ mark deducted per wrong answer.
 - **Official Portal:** [rrbapply.gov.in](https://rrbapply.gov.in/)`;
+  }
+
+  // General "when next exam" master calendar
+  if (q.includes('when') && (q.includes('next') || q.includes('exam'))) {
+    return `# 📅 Upcoming Major Competitive Exams (Annual Calendar)
+
+| Exam | Conducting Body | Notification | Prelims Exam | Mains / Stage 2 | Official Website |
+|---|---|---|---|---|---|
+| **IBPS PO** | IBPS | July / August | October | November | [ibps.in](https://www.ibps.in/) |
+| **IBPS Clerk** | IBPS | June / July | August / Sept | October | [ibps.in](https://www.ibps.in/) |
+| **SBI PO** | SBI | Sept / October | November | December / Jan | [sbi.co.in](https://sbi.co.in/) |
+| **SSC CGL** | SSC | June / July | Sept / October | December / Jan | [ssc.gov.in](https://ssc.gov.in/) |
+| **SSC CHSL** | SSC | April / May | June / July | October / Nov | [ssc.gov.in](https://ssc.gov.in/) |
+| **RRB NTPC** | Railways | August / Sept | Nov / December | Jan / February | [rrbapply.gov.in](https://rrbapply.gov.in/) |
+| **UPSC CSE** | UPSC | January / Feb | May / June | September | [upsc.gov.in](https://upsc.gov.in/) |
+
+💡 *Tip: Ask about any specific exam above for full syllabus, topic-wise breakdown, and formulas!*`;
   }
 
   // If textbook chapter context was retrieved, provide a structured summary

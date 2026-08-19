@@ -30,11 +30,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Fetch previous conversation history for multi-turn context
+    const history = await getChatHistory(sessionId);
+
     // Save user message to database isolated by session
     await saveChatMessage('user', question, [], sessionId);
 
-    // Get answer from RAG
-    const { response, sources } = await getAnswer(question, model);
+    // Get answer from RAG with history context
+    const { response, sources } = await getAnswer(question, model, history);
 
     // Save AI response to database isolated by session
     await saveChatMessage('ai', response, sources, sessionId);
