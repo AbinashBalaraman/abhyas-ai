@@ -71,7 +71,7 @@ export default function ChatPage() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: userQuestion, model, sessionId }),
+        body: JSON.stringify({ question: userQuestion, model, sessionId, history: messages }),
       });
       
       const data = await response.json();

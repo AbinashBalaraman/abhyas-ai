@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const question = body.question || body.message;
     const model = body.model || 'deepseek-v4-flash-free';
     const sessionId = body.sessionId || request.headers.get('x-session-id') || 'default';
+    const clientHistory = body.history || [];
     
     if (!question || !question.trim()) {
       return NextResponse.json(
@@ -31,8 +32,9 @@ export async function POST(request: Request) {
     }
 
     // Pass request to the Master Supervisor Multi-Agent Orchestrator
-    const history = await getChatHistory(sessionId);
-    const { response, sources } = await getAnswer(question, model, history, sessionId);
+    const dbHistory = await getChatHistory(sessionId);
+    const combinedHistory = clientHistory.length > 0 ? clientHistory : dbHistory;
+    const { response, sources } = await getAnswer(question, model, combinedHistory, sessionId);
 
     return NextResponse.json({ response, sources, rag_used: !!sources?.length });
   } catch (error: any) {

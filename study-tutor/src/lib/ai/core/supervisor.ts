@@ -39,7 +39,7 @@ export class MasterSupervisorOrchestrator {
 
   /**
    * Main Conversational Master Agent Pipeline:
-   * 1. Load multi-turn conversation memory
+   * 1. Load multi-turn conversation memory (merging client state if provided)
    * 2. Dynamically execute factual tools when specific data or exam details are requested
    * 3. Let Master LLM speak naturally like an expert human tutor with continuous context
    * 4. Save turn to memory
@@ -47,12 +47,13 @@ export class MasterSupervisorOrchestrator {
   async process(
     userPrompt: string,
     sessionId: string = 'default',
-    preferredModel: string = 'gemini-flash-lite-latest'
+    preferredModel: string = 'gemini-flash-lite-latest',
+    clientProvidedHistory: Array<{ role: string; content: string }> = []
   ): Promise<{ response: string; sources: Source[] }> {
     const cleanPrompt = userPrompt.trim();
 
     // 1. Load multi-turn conversation history (last 12 turns for continuous context)
-    const context = await this.memory.getContext(sessionId, 12);
+    const context = await this.memory.getContext(sessionId, 12, clientProvidedHistory);
     const history = context.history || [];
 
     // 2. Identify if factual tools should be queried
@@ -110,7 +111,7 @@ export class MasterSupervisorOrchestrator {
     const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer|solve it|show solution|shortcut formula)\b/i.test(query);
 
     // 1. Check if query is asking for exam details, mark allocation, dates, pattern, negative marking, eligibility, attempts, optional
-    const isExamQuery = /\b(exam|notification|admit card|dates|schedule|when is|cutoff|vacancy|vacancies|eligibility|apply|calendar|sbi|ibps|ssc|rrb|upsc|cgl|chsl|ntpc|po|clerk|ias|marks|mark allocation|marking scheme|negative marking|tier|prelims|mains|sectional|weightage|duration|pattern|syllabus|age limit|attempts|optional|interview|paper)\b/i.test(q);
+    const isExamQuery = /\b(exam|notification|admit card|dates|schedule|when is|cutoff|vacancy|vacancies|eligibility|apply|calendar|sbi|ibps|ssc|rrb|upsc|cgl|chsl|cpo|mts|ntpc|alp|technician|loco pilot|group d|je|po|clerk|ias|marks|mark allocation|marking scheme|negative marking|tier|prelims|mains|cbt|cbat|sectional|weightage|duration|pattern|syllabus|age limit|attempts|optional|interview|paper|neet|jee)\b/i.test(q);
     
     if (isExamQuery && !isSolvingPrecedingProblem) {
       const examWorker = this.registry.getAgent('exam_intel');
@@ -197,7 +198,7 @@ CURRENT REAL-WORLD DATE: August 2026${activeExamContext}
 === STRICT CONVERSATIONAL GUIDELINES ===
 1. Speak naturally, warmly, and like an expert human mentor. Maintain seamless conversational continuity across long multi-turn chats.
 2. CONTINUOUS CONTEXT RETENTION:
-   - When a student asks a follow-up question (e.g. "What about optional papers?", "How is the interview evaluated?", "What is the age limit and attempts?", "What is the negative marking?"), DO NOT ask "Which exam are you targeting?".
+   - When a student asks a follow-up question (e.g. "What about optional papers?", "How is the interview evaluated?", "What is the age limit and attempts?", "What is the negative marking?", "What is the mark allocation?"), DO NOT ask "Which exam are you targeting?".
    - If verified factual data for an exam is present in the VERIFIED FACTUAL EXAM & KNOWLEDGE DATA block below, you MUST use that data directly and answer the user's question for that exam immediately.
    - If the student explicitly switches topics (e.g. "Now let's switch to SSC CGL"), immediately switch and answer for the new topic.
 3. STEP-BY-STEP PROBLEM SOLVER:
@@ -205,7 +206,7 @@ CURRENT REAL-WORLD DATE: August 2026${activeExamContext}
 4. MARK ALLOCATION & EXAM PATTERNS:
    - Provide structured markdown tables for mark allocation (Questions, Marks, Time, Negative Marking, Qualifying vs Merit status).
 5. EXPLORATORY TOPICS:
-   - When a student mentions a single topic or broad exam name (e.g. "SBI PO", "Trigonometry", "Photosynthesis"), give a concise 2-3 sentence overview and warmly invite them to choose how they'd like to proceed.
+   - When a student mentions a single topic or broad exam name (e.g. "RRB ALP", "SBI PO", "Trigonometry", "Photosynthesis"), give a concise 2-3 sentence overview and warmly invite them to choose how they'd like to proceed.
 6. Use LaTeX for math: \\(...\\) for inline and \\[...\\] for display formulas.
 7. Incorporate verified tool data below whenever provided.${verifiedDataBlock}`;
   }

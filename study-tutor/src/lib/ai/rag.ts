@@ -19,5 +19,5 @@ export async function getAnswer(
   sources: Source[];
 }> {
   const supervisor = MasterSupervisorOrchestrator.getInstance();
-  return supervisor.process(question, sessionId, model);
+  return supervisor.process(question, sessionId, model, chatHistory);
 }
