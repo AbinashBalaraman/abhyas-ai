@@ -1,0 +1,15 @@
+{
+  "name": "abhyas-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Abhyas AI — Competitive Exam Preparation & AI Tutor Platform",
+  "scripts": {
+    "dev": "npm run dev --prefix study-tutor",
+    "build": "npm run build --prefix study-tutor",
+    "start": "npm run start --prefix study-tutor",
+    "lint": "npm run lint --prefix study-tutor"
+  },
+  "dependencies": {
+    "next": "^16.2.9"
+  }
+}
