@@ -1,5 +1,3 @@
-import { tavily } from '@tavily/core';
-
 export async function callLLM(
   model: string,
   systemPrompt: string,
@@ -96,14 +94,12 @@ async function callOpenCodeZenWithFallback(
   // Cascade through high-capacity free models with fast 4.5s timeouts
   for (const altModel of FALLBACK_MODELS) {
     if (altModel === modelName) continue;
-    console.log(`Cascade failover to OpenCode ${altModel}...`);
     result = await tryOpenCode(altModel, systemPrompt, userMessage, apiKey);
     if (result.success) return result.text;
   }
 
   // Try Google Gemini as resilient fallback
   if (geminiKey) {
-    console.log('Cascade failover to Google Gemini 2.5 Flash...');
     const geminiText = await callGeminiDirect('gemini-2.5-flash', systemPrompt, userMessage, geminiKey);
     if (geminiText) return geminiText;
   }
@@ -170,33 +166,7 @@ export interface WebSearchResult {
 }
 
 export async function webSearch(query: string): Promise<WebSearchResult> {
-  // 1. Check Tavily AI Search (Native AI Search Engine SDK)
-  const tavilyKey = process.env.TAVILY_API_KEY || '';
-  if (tavilyKey) {
-    try {
-      const tv = tavily({ apiKey: tavilyKey });
-      const searchRes = await tv.search(query, {
-        searchDepth: 'basic',
-        maxResults: 5
-      });
-
-      if (searchRes.results && searchRes.results.length > 0) {
-        const textParts = searchRes.results.map((r: any) => `• [${r.title}] (${r.url}):\n${r.content}`);
-        const sources: WebSearchSource[] = searchRes.results.map((r: any) => ({
-          title: r.title || r.url,
-          uri: r.url
-        }));
-        return {
-          text: textParts.join('\n\n'),
-          sources
-        };
-      }
-    } catch (e) {
-      console.error('Tavily search error:', e);
-    }
-  }
-
-  // 2. Google Gemini Native Google Search Grounding
+  // 1. Google Gemini Native Search Grounding (if key available)
   const geminiKey = process.env.GEMINI_API_KEY || '';
   if (geminiKey) {
     try {
@@ -205,7 +175,7 @@ export async function webSearch(query: string): Promise<WebSearchResult> {
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(4000),
+          signal: AbortSignal.timeout(3500),
           body: JSON.stringify({
             contents: [
               {
@@ -238,8 +208,46 @@ export async function webSearch(query: string): Promise<WebSearchResult> {
         }
       }
     } catch (error: any) {
-      console.error('Gemini search grounding error:', error);
+      console.error('Gemini search grounding error:', error.message);
     }
+  }
+
+  // 2. Keyless Zero-Key Open Search (DuckDuckGo Instant Answer API - Always 100% Free & No Keys Required)
+  try {
+    const ddgUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+    const ddgRes = await fetch(ddgUrl, { signal: AbortSignal.timeout(3000) });
+    if (ddgRes.ok) {
+      const data = await ddgRes.json();
+      const textParts: string[] = [];
+      const sources: WebSearchSource[] = [];
+
+      if (data.Heading && data.AbstractText) {
+        textParts.push(`• **${data.Heading}** (${data.AbstractSource || 'Web'}):\n${data.AbstractText}`);
+        if (data.AbstractURL) {
+          sources.push({ title: data.Heading, uri: data.AbstractURL });
+        }
+      }
+
+      if (data.RelatedTopics && Array.isArray(data.RelatedTopics)) {
+        for (const topic of data.RelatedTopics.slice(0, 4)) {
+          if (topic.Text) {
+            textParts.push(`• ${topic.Text}`);
+            if (topic.FirstURL) {
+              sources.push({ title: topic.Text.split(' - ')[0] || 'Official Source', uri: topic.FirstURL });
+            }
+          }
+        }
+      }
+
+      if (textParts.length > 0) {
+        return {
+          text: textParts.join('\n\n'),
+          sources
+        };
+      }
+    }
+  } catch (e: any) {
+    console.error('DuckDuckGo keyless search error:', e.message);
   }
 
   return { text: '', sources: [] };
