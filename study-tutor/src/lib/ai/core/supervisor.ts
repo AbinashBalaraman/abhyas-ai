@@ -149,40 +149,28 @@ CURRENT REAL-WORLD DATE: August 2026
 
 === AVAILABLE WORKER SUB-AGENTS ===
 ${manifest}
-- **'direct_chat'**: Conversational responses, greetings, pleasantries, motivation, study tips, or clarifying questions without querying databases.
+- **'direct_chat'**: PURE pleasantries, greetings, thanks, goodbyes, or motivation ONLY.
 
-=== YOUR OBJECTIVE ===
-Inspect the student's message and conversation history. Reason through the true intent, and output a STRICT JSON planning object.
+=== ROUTING RULES ===
+1. If the student names or asks about an exam (e.g. "sbi po", "ibps po", "ssc cgl", "rrb ntpc", "bank exam"), choose action: "call_subagent", subagent: "exam_intel" to give them an official schedule & recruitment overview.
+2. If the student names or asks about a subject topic or formula (e.g. "simple interest", "syllogism", "noun rules", "percentage"), choose action: "call_subagent", subagent: "knowledge_rag" to retrieve theory & formulas.
+3. If the student asks for a quiz, mock test, or practice questions, choose action: "call_subagent", subagent: "quiz_generator".
+4. If the student asks a hybrid query (e.g. "explain SI and quiz me"), choose action: "parallel_call" with both sub-agents.
+5. ONLY choose action: "direct_chat" if the student is purely greeting ("hi", "hello"), saying thanks ("thank you"), or saying goodbye.
 
 === JSON OUTPUT SCHEMA ===
 {
-  "thought": "Brief 1-sentence reasoning explaining what the user wants",
+  "thought": "Brief reasoning explaining student intent",
   "action": "direct_chat" | "call_subagent" | "parallel_call",
   "tasks": [
     {
       "subagent": "exam_intel" | "knowledge_rag" | "quiz_generator" | "web_research",
-      "instruction": "Specific search query or task instruction for the worker"
+      "instruction": "Specific target exam or search topic"
     }
   ]
 }
 
-=== EXAMPLES OF TRUE REASONING ===
-- Student: "hi" or "hello" or "good morning"
-  {"thought": "Student is greeting me. No database lookup needed.", "action": "direct_chat", "tasks": []}
-
-- Student: "when is ibps po exam next"
-  {"thought": "Student wants upcoming dates and admit card info for IBPS PO.", "action": "call_subagent", "tasks": [{"subagent": "exam_intel", "instruction": "ibps po 2026 exam dates and admit card"}]}
-
-- Student: "explain compound interest formula and derive it"
-  {"thought": "Student wants conceptual explanation and formula derivation for Compound Interest.", "action": "call_subagent", "tasks": [{"subagent": "knowledge_rag", "instruction": "Compound interest formula and derivation"}]}
-
-- Student: "explain percentages and give me 3 practice MCQs"
-  {"thought": "Student has a hybrid request: concept explanation and practice MCQs.", "action": "parallel_call", "tasks": [{"subagent": "knowledge_rag", "instruction": "Percentage concept and formulas"}, {"subagent": "quiz_generator", "instruction": "3 percentage practice MCQs"}]}
-
-- Student: "thank you so much!"
-  {"thought": "Student is expressing gratitude.", "action": "direct_chat", "tasks": []}
-
-Output ONLY valid JSON. No conversational text in this step.`;
+Output STRICT JSON only.`;
 
     const historySnippet = (context.history || []).slice(-4).map(m => `${m.role}: ${m.content}`).join('\n');
     const plannerUserMessage = `${historySnippet ? `[Recent Chat History]:\n${historySnippet}\n\n` : ''}STUDENT CURRENT MESSAGE: "${query}"`;
@@ -196,14 +184,31 @@ Output ONLY valid JSON. No conversational text in this step.`;
         return parsed;
       }
     } catch (e: any) {
-      console.warn('[MasterSupervisor] LLM planning parser fallback:', e.message);
+      console.warn('[MasterSupervisor] LLM planning parser error:', e.message);
     }
 
-    // Default intelligent fallback if JSON parsing failed
+    // Default intelligent fallback if network parsing failed
+    const qLower = query.toLowerCase();
+    if (/\b(sbi|ibps|ssc|rrb|upsc|cgl|po|clerk|ntpc|exam|admit|date|notification)\b/i.test(qLower)) {
+      return {
+        thought: 'Exam query fallback routing',
+        action: 'call_subagent',
+        tasks: [{ subagent: 'exam_intel', instruction: query }]
+      };
+    }
+
+    if (/^(hi|hello|hey|greetings|thanks|thank you|bye)\b/i.test(qLower)) {
+      return {
+        thought: 'Greeting fallback routing',
+        action: 'direct_chat',
+        tasks: []
+      };
+    }
+
     return {
-      thought: 'Autonomous fallback routing',
-      action: query.length < 15 ? 'direct_chat' : 'call_subagent',
-      tasks: query.length < 15 ? [] : [{ subagent: 'knowledge_rag', instruction: query }]
+      thought: 'Concept study fallback routing',
+      action: 'call_subagent',
+      tasks: [{ subagent: 'knowledge_rag', instruction: query }]
     };
   }
 
@@ -213,11 +218,11 @@ CURRENT REAL-WORLD DATE: August 2026
 
 === YOUR MISSION & INSTRUCTIONS ===
 1. Synthesize a clean, student-centric response based on the Master Plan: "${plan.thought}".
-2. If the user is greeting or having casual chat, respond warmly as an encouraging, expert tutor.
-3. For Math / Formulas: Use LaTeX delimiters \\(...\\) for inline and \\[...\\] for display equations.
-4. For Exam Schedules: Use clean Markdown tables with exact dates and official portal links.
-5. For Practice Questions: Provide 4 options, the correct answer, and an elegant step-by-step solution.
-6. NEVER contradict the verified data provided by sub-agents.
+2. If the user is greeting, respond warmly as an encouraging, expert tutor.
+3. If the user mentions a specific exam (like SBI PO or SSC CGL), provide the official dates, notification status, vacancies, and exam pattern clearly.
+4. For Math / Formulas: Use LaTeX delimiters \\(...\\) for inline and \\[...\\] for display equations.
+5. For Exam Schedules: Use clean Markdown tables with exact dates and official portal links.
+6. For Practice Questions: Provide 4 options, the correct answer, and an elegant step-by-step solution.
 7. Keep responses concise, high-yield, and under 400 words.`;
   }
 
@@ -243,7 +248,7 @@ Synthesize the final tutor response for the student based strictly on the verifi
     const examWorker = results.find(r => r.workerId === 'exam_intel');
     if (examWorker?.data?.examTitle) {
       const d = examWorker.data;
-      return `# 🏦 ${d.examTitle} Schedule\n\n| Event | Date / Details |\n|---|---|\n| Prelims Exam | **${d.prelimsDates || 'Scheduled'}** |\n| Admit Card | ${d.admitCard || 'Released'} |\n| Mains Exam | ${d.mainsDate || 'Upcoming'} |\n| Official Portal | [${d.portal}](${d.portal}) |`;
+      return `# 🏦 ${d.examTitle} Schedule\n\n| Event | Date / Details |\n|---|---|\n| Notification | ${d.notification || 'Released'} |\n| Admit Card | ${d.admitCard || 'Released'} |\n| Prelims Exam | **${d.prelimsDates || 'Scheduled'}** |\n| Mains Exam | ${d.mainsDate || 'Upcoming'} |\n| Official Portal | [${d.portal}](${d.portal}) |`;
     }
 
     const ragWorker = results.find(r => r.workerId === 'knowledge_rag');
