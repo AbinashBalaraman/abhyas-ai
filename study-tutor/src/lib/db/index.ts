@@ -123,11 +123,11 @@ export async function getChatHistory(sessionId: string = 'default') {
   try {
     const client = await pool.connect();
     try {
-      // Check if session_id column exists, otherwise fall back to global
-      const res = await client.query(
-        'SELECT sender, text, sources, timestamp FROM chat_history WHERE session_id = $1 OR session_id IS NULL ORDER BY timestamp ASC',
-        [sessionId]
-      );
+      // Strictly isolate chat history by sessionId
+      const query = sessionId === 'default'
+        ? 'SELECT sender, text, sources, timestamp FROM chat_history WHERE session_id = $1 OR session_id IS NULL ORDER BY timestamp ASC'
+        : 'SELECT sender, text, sources, timestamp FROM chat_history WHERE session_id = $1 ORDER BY timestamp ASC';
+      const res = await client.query(query, [sessionId]);
       return res.rows.map(row => ({
         role: row.sender === 'user' ? 'user' : 'ai',
         content: row.text,

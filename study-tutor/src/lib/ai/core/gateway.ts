@@ -105,12 +105,22 @@ export class MultiTierModelGateway {
       }
     }
 
+    // Gemini API strict rule: First turn must be 'user'
+    while (contents.length > 0 && contents[0].role === 'model') {
+      contents.shift();
+    }
+
+    if (contents.length === 0) {
+      const lastMsg = messages[messages.length - 1]?.content || 'Hello';
+      contents.push({ role: 'user', parts: [{ text: lastMsg }] });
+    }
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(12000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -146,7 +156,7 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(12000),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
