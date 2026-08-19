@@ -320,7 +320,7 @@ ${context || 'No specific textbook chapter context needed for this query.'}
   } catch (error: any) {
     console.error('Error generating answer in rag:', error);
     return {
-      response: web.text || `Failed to generate answer: ${error.message}`,
+      response: webText || `Failed to generate answer: ${error.message}`,
       sources: webSources
     };
   }
