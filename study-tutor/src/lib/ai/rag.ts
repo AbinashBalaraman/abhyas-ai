@@ -272,10 +272,12 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
 
   // Live web search using Gemini's native Google Search grounding
   let webContext = '';
+  let webText = '';
   let webSources: Source[] = [];
   try {
     const web = await webSearch(question);
     if (web.text) {
+      webText = web.text;
       webContext = `=== LIVE REAL-TIME GOOGLE SEARCH RESULTS (FETCHED NOW) ===\n${web.text}\n======================================================`;
       webSources = web.sources.map((s) => ({
         title: s.title || s.uri,
@@ -290,9 +292,9 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
   const isLiveQuery = /\b(next|date|dates|when|notification|schedule|current|latest|vacancy|vacancies|apply|admit|result|cutoff|cut-off|update|news)\b/i.test(question);
 
   // If live search has the exact answer for real-time questions, return it directly to avoid double-LLM latency timeouts
-  if (isLiveQuery && web.text && web.text.length > 50) {
+  if (isLiveQuery && webText && webText.length > 50) {
     return {
-      response: web.text,
+      response: webText,
       sources: [...webSources, ...sources]
     };
   }
