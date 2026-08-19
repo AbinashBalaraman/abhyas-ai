@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface Chapter {
   id: string;
@@ -146,8 +146,8 @@ export default function ChapterViewer({ chapters, subjects }: ChapterViewerProps
                   <div className="w-8 h-8 border-3 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
                 </div>
               ) : (
-                <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed">
-                  <ReactMarkdown>{content}</ReactMarkdown>
+                <div className="w-full text-slate-300 leading-relaxed">
+                  <MarkdownRenderer content={content} />
                 </div>
               )}
             </div>

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 export default function ChatPage() {
   const [question, setQuestion] = useState('');
@@ -178,8 +176,8 @@ export default function ChatPage() {
               </span>
             </div>
             
-            <div className="prose prose-invert prose-sm max-w-none text-slate-200 leading-relaxed break-words">
-              <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{msg.content}</ReactMarkdown>
+            <div className="w-full text-slate-200 leading-relaxed">
+              <MarkdownRenderer content={msg.content} />
             </div>
             
             {msg.sources && msg.sources.length > 0 && (

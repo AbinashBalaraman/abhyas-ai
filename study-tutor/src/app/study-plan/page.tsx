@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 export default function StudyPlanGenerator() {
   const [examType, setExamType] = useState('');
   const [weakAreas, setWeakAreas] = useState('');
-  const [model, setModel] = useState('gemini');
+  const [model, setModel] = useState('deepseek-free');
   const [plan, setPlan] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -75,8 +75,8 @@ export default function StudyPlanGenerator() {
                 onChange={(e) => setModel(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
               >
+                <option value="deepseek-free">OpenCode Flash (DeepSeek)</option>
                 <option value="gemini">Google Gemini 2.5 Flash</option>
-                <option value="deepseek-free">DeepSeek v4 Flash Free</option>
                 <option value="mimo-free">Mimo v2.5 Free</option>
                 <option value="ollama">Local Ollama (Qwen 2.5)</option>
                 <option value="mistral">Mistral Large (Fallback)</option>
@@ -132,8 +132,8 @@ export default function StudyPlanGenerator() {
               </span>
             </div>
             
-            <div className="prose prose-invert prose-sm max-w-none text-slate-350 leading-relaxed space-y-4">
-              <ReactMarkdown>{plan}</ReactMarkdown>
+            <div className="w-full text-slate-200 leading-relaxed">
+              <MarkdownRenderer content={plan} />
             </div>
           </div>
         )}
