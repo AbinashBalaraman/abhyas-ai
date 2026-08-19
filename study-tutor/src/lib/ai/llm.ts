@@ -3,28 +3,28 @@ export async function callLLM(
   systemPrompt: string,
   userMessage: string
 ): Promise<string> {
-  const modelKey = (model || 'deepseek-free').toLowerCase();
+  const modelKey = (model || 'deepseek-v4-flash-free').toLowerCase();
 
   const geminiKey = process.env.GEMINI_API_KEY || '';
   const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
-  // 1. Google Gemini Models
-  if (modelKey === 'gemini' || modelKey === 'gemini-1.5-flash' || modelKey === 'gemini-2.5-flash') {
+  // --- TIER 2 EXPLICIT: Google Gemini API ---
+  if (modelKey.includes('gemini')) {
     const geminiResult = await callGeminiDirect('gemini-2.5-flash', systemPrompt, userMessage, geminiKey);
     if (geminiResult) return geminiResult;
 
-    // Fallback to OpenCode Zen
-    console.log('Gemini failed/unavailable. Falling back to OpenCode Zen...');
-    return callOpenCodeZenWithFallback('deepseek-v4-flash-free', systemPrompt, userMessage, openCodeKey, geminiKey);
+    // Fallback to Tier 1 (OpenCode Zen)
+    console.log('Tier 2 Gemini unavailable. Falling back to Tier 1 OpenCode...');
+    return callTier1OpenCodeCascade('deepseek-v4-flash-free', systemPrompt, userMessage, openCodeKey, geminiKey);
   }
 
-  // 2. OpenCode Zen Models (Default / DeepSeek / Mimo / Nemotron / Mistral)
-  const initialModel = modelKey === 'mimo-free' || modelKey === 'mimo-v2.5-free' 
+  // --- TIER 1: OpenCode Zen (DeepSeek v4 Flash / Mimo 2.5) ---
+  const initialTier1Model = modelKey.includes('mimo') 
     ? 'mimo-v2.5-free' 
     : 'deepseek-v4-flash-free';
 
-  return callOpenCodeZenWithFallback(
-    initialModel,
+  return callTier1OpenCodeCascade(
+    initialTier1Model,
     systemPrompt,
     userMessage,
     openCodeKey,
@@ -32,79 +32,42 @@ export async function callLLM(
   );
 }
 
-async function callGeminiDirect(
-  modelName: string,
-  systemPrompt: string,
-  userMessage: string,
-  apiKey: string
-): Promise<string | null> {
-  if (!apiKey) return null;
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(4000),
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: `${systemPrompt}\n\nUser Message: ${userMessage}` }]
-            }
-          ],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
-        })
-      }
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data = await response.json();
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
-    }
-    return null;
-  } catch (error: any) {
-    return null;
-  }
-}
-
-const FALLBACK_MODELS = [
-  'nemotron-3.5-lightning-free',
-  'hy3-free',
-  'mimo-v2.5-free',
+// -------------------------------------------------------------
+// TIER 1: OpenCode Zen Models Cascade (DeepSeek v4 Flash -> Mimo 2.5)
+// -------------------------------------------------------------
+const TIER1_MODELS = [
   'deepseek-v4-flash-free',
-  'nemotron-3-ultra-free'
+  'mimo-v2.5-free',
+  'nemotron-3.5-lightning-free',
+  'hy3-free'
 ];
 
-async function callOpenCodeZenWithFallback(
-  modelName: string,
+async function callTier1OpenCodeCascade(
+  preferredModel: string,
   systemPrompt: string,
   userMessage: string,
-  apiKey: string,
+  openCodeKey: string,
   geminiKey: string
 ): Promise<string> {
-  // Try preferred model first
-  let result = await tryOpenCode(modelName, systemPrompt, userMessage, apiKey);
+  // 1. Try preferred Tier 1 model first (e.g. DeepSeek v4 Flash or Mimo 2.5)
+  let result = await tryOpenCode(preferredModel, systemPrompt, userMessage, openCodeKey);
   if (result.success) return result.text;
 
-  // Cascade through high-capacity free models with fast 4.5s timeouts
-  for (const altModel of FALLBACK_MODELS) {
-    if (altModel === modelName) continue;
-    result = await tryOpenCode(altModel, systemPrompt, userMessage, apiKey);
+  // 2. Cascade through remaining Tier 1 models
+  for (const altModel of TIER1_MODELS) {
+    if (altModel === preferredModel) continue;
+    result = await tryOpenCode(altModel, systemPrompt, userMessage, openCodeKey);
     if (result.success) return result.text;
   }
 
-  // Try Google Gemini as resilient fallback
+  // 3. Auto-escalate to Tier 2 (Google Gemini API) if Tier 1 endpoints are busy
   if (geminiKey) {
+    console.log('Tier 1 OpenCode busy. Escalating to Tier 2 Google Gemini API...');
     const geminiText = await callGeminiDirect('gemini-2.5-flash', systemPrompt, userMessage, geminiKey);
     if (geminiText) return geminiText;
   }
 
-  // Last resort: unauthenticated OpenCode pool on nemotron
+  // 4. Last resort: unauthenticated pool
   result = await tryOpenCode('nemotron-3.5-lightning-free', systemPrompt, userMessage, '');
   if (result.success) return result.text;
 
@@ -152,6 +115,49 @@ async function tryOpenCode(
     return { success: false, text: '', error: 'Empty choices in response' };
   } catch (error: any) {
     return { success: false, text: '', error: error.message };
+  }
+}
+
+// -------------------------------------------------------------
+// TIER 2: Google Gemini Direct API Call
+// -------------------------------------------------------------
+async function callGeminiDirect(
+  modelName: string,
+  systemPrompt: string,
+  userMessage: string,
+  apiKey: string
+): Promise<string | null> {
+  if (!apiKey) return null;
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(4500),
+        body: JSON.stringify({
+          contents: [
+            {
+              role: 'user',
+              parts: [{ text: `${systemPrompt}\n\nUser Question: ${userMessage}` }]
+            }
+          ],
+          generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+      return data.candidates[0].content.parts[0].text;
+    }
+    return null;
+  } catch (error: any) {
+    return null;
   }
 }
 

@@ -126,11 +126,9 @@ export default function ChatPage() {
               }}
               className="bg-transparent border-none text-sm text-indigo-400 font-medium focus:outline-none cursor-pointer"
             >
-              <option value="deepseek-free" className="bg-slate-950 text-slate-100">OpenCode Flash (DeepSeek)</option>
-              <option value="gemini" className="bg-slate-950 text-slate-100">Google Gemini 2.5 Flash</option>
-              <option value="mimo-free" className="bg-slate-950 text-slate-100">Mimo v2.5 Free</option>
-              <option value="ollama" className="bg-slate-950 text-slate-100">Local Ollama (Qwen 2.5)</option>
-              <option value="mistral" className="bg-slate-950 text-slate-100">Mistral Large (Fallback)</option>
+              <option value="deepseek-v4-flash-free" className="bg-slate-950 text-slate-100">Tier 1: DeepSeek v4 Flash (OpenCode)</option>
+              <option value="mimo-v2.5-free" className="bg-slate-950 text-slate-100">Tier 1: Mimo v2.5 Free (OpenCode)</option>
+              <option value="gemini-2.5-flash" className="bg-slate-950 text-slate-100">Tier 2: Google Gemini 2.5 Flash API</option>
             </select>
           </div>
           
