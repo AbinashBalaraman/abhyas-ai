@@ -297,10 +297,21 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
     };
   }
 
+  const now = new Date();
+  const currentDateStr = now.toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   const systemPrompt = `You are an expert AI Study Tutor for Indian Competitive Exams (SSC CGL/CHSL, RRB NTPC, IBPS/SBI Banking, UPSC, State PSCs).
+CURRENT REAL-WORLD DATE: ${currentDateStr}. Current Year: ${now.getFullYear()}.
+When answering questions regarding upcoming exam notifications, dates, or schedules, anchor your answer relative to ${now.getFullYear()} and the current exam cycle.
+
 Answer clearly, concisely, and use Markdown tables and bold text. Keep your answer under 400 words.
 
-${webContext ? `${webContext}\n\nUse the live search results above for all dates, schedules, and vacancies.` : ''}
+${webContext ? `${webContext}\n\nUse the live search results above for all exact dates, schedules, and vacancies.` : ''}
 
 === STUDY MATERIAL CONTEXT ===
 ${context || 'No specific textbook chapter context needed for this query.'}

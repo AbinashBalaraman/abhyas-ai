@@ -1,3 +1,5 @@
+import { tavily } from '@tavily/core';
+
 export async function callLLM(
   model: string,
   systemPrompt: string,
@@ -168,49 +170,77 @@ export interface WebSearchResult {
 }
 
 export async function webSearch(query: string): Promise<WebSearchResult> {
-  const geminiKey = process.env.GEMINI_API_KEY || '';
-  if (!geminiKey) {
-    return { text: '', sources: [] };
-  }
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(4000),
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: `Search the web and give the most current, accurate, and up-to-date information for the following query. Prefer official sources (e.g. sbi.co.in, ibps.in, ssc.nic.in) and recent articles. Query: ${query}`
-                }
-              ]
-            }
-          ],
-          tools: [{ googleSearch: {} }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
-        })
+  // 1. Check Tavily AI Search (Native AI Search Engine SDK)
+  const tavilyKey = process.env.TAVILY_API_KEY || '';
+  if (tavilyKey) {
+    try {
+      const tv = tavily({ apiKey: tavilyKey });
+      const searchRes = await tv.search(query, {
+        searchDepth: 'basic',
+        maxResults: 5
+      });
+
+      if (searchRes.results && searchRes.results.length > 0) {
+        const textParts = searchRes.results.map((r: any) => `• [${r.title}] (${r.url}):\n${r.content}`);
+        const sources: WebSearchSource[] = searchRes.results.map((r: any) => ({
+          title: r.title || r.url,
+          uri: r.url
+        }));
+        return {
+          text: textParts.join('\n\n'),
+          sources
+        };
       }
-    );
-
-    if (!response.ok) {
-      return { text: '', sources: [] };
+    } catch (e) {
+      console.error('Tavily search error:', e);
     }
-
-    const data = await response.json();
-    const parts = data.candidates?.[0]?.content?.parts || [];
-    const text = parts.map((p: any) => p.text || '').join('');
-
-    const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const sources: WebSearchSource[] = chunks
-      .filter((c: any) => c.web?.uri)
-      .map((c: any) => ({ title: c.web.title || c.web.uri, uri: c.web.uri }));
-
-    return { text: text.trim(), sources };
-  } catch (error: any) {
-    return { text: '', sources: [] };
   }
+
+  // 2. Google Gemini Native Google Search Grounding
+  const geminiKey = process.env.GEMINI_API_KEY || '';
+  if (geminiKey) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(4000),
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    text: `Search the web and give the most current, accurate, and up-to-date information for the following query. Prefer official sources (e.g. sbi.co.in, ibps.in, ssc.nic.in) and recent articles. Query: ${query}`
+                  }
+                ]
+              }
+            ],
+            tools: [{ googleSearch: {} }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
+          })
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const text = parts.map((p: any) => p.text || '').join('');
+
+        const chunks = data.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        const sources: WebSearchSource[] = chunks
+          .filter((c: any) => c.web?.uri)
+          .map((c: any) => ({ title: c.web.title || c.web.uri, uri: c.web.uri }));
+
+        if (text.trim()) {
+          return { text: text.trim(), sources };
+        }
+      }
+    } catch (error: any) {
+      console.error('Gemini search grounding error:', error);
+    }
+  }
+
+  return { text: '', sources: [] };
 }
