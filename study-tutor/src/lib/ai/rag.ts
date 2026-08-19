@@ -9,8 +9,6 @@ export interface Source {
   path: string;
 }
 
-// Short exam/service acronyms that are too small for the normal >3 char keyword
-// filter but are strong discriminators (e.g. "SBI PO", "IBPS PO", "SSC CGL").
 const EXAM_TOKENS = ['sbi', 'po', 'ibps', 'ssc', 'rrb', 'rbi', 'upsc', 'clerk', 'so', 'cgl', 'chsl', 'gat', 'cat'];
 
 const KEYWORD_SUBJECT_MAP: Record<string, { subject: string; titleKeywords: string[] }> = {
@@ -83,7 +81,7 @@ const KEYWORD_SUBJECT_MAP: Record<string, { subject: string; titleKeywords: stri
   'database': { subject: 'Computer_Aptitude', titleKeywords: ['database'] },
 };
 
-function extractRelevantSnippet(content: string, keywords: string[], maxLen: number = 12000): string {
+function extractRelevantSnippet(content: string, keywords: string[], maxLen: number = 4000): string {
   if (content.length <= maxLen) {
     return content;
   }
@@ -217,7 +215,7 @@ export async function findContext(query: string): Promise<{ context: string; sou
 
     candidates.sort((a, b) => b.titleScore - a.titleScore);
 
-    const topCandidates = candidates.slice(0, 10);
+    const topCandidates = candidates.slice(0, 8);
     const scoredChapters: Array<{ chapter: any; score: number; content: string }> = [];
 
     for (const { chapter, titleScore } of topCandidates) {
@@ -246,7 +244,7 @@ export async function findContext(query: string): Promise<{ context: string; sou
       const contextParts: string[] = [];
 
       for (const { chapter, score, content } of topChapters) {
-        const snippet = extractRelevantSnippet(content, keywords, 3500);
+        const snippet = extractRelevantSnippet(content, keywords, 3000);
         contextParts.push(`[Source: ${chapter.title} (${chapter.subject})]\n\n${snippet}`);
         sources.push({
           title: chapter.title,
@@ -291,7 +289,7 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
 
   const isLiveQuery = /\b(next|date|dates|when|notification|schedule|current|latest|vacancy|vacancies|apply|admit|result|cutoff|cut-off|update|news)\b/i.test(question);
 
-  // If live search has the exact answer for real-time questions, return it directly to avoid double-LLM latency timeouts
+  // If live search has the exact answer for real-time questions, return it directly
   if (isLiveQuery && webText && webText.length > 50) {
     return {
       response: webText,
@@ -299,31 +297,131 @@ export async function getAnswer(question: string, model: string = 'deepseek-free
     };
   }
 
-  const systemPrompt = `You are a highly helpful and precise AI Study Tutor for Indian Competitive Exams (SSC, RRB, Banking/IBPS/SBI, UPSC, Defence, State PSCs).
+  const systemPrompt = `You are an expert AI Study Tutor for Indian Competitive Exams (SSC CGL/CHSL, RRB NTPC, IBPS/SBI Banking, UPSC, State PSCs).
+Answer clearly, concisely, and use Markdown tables and bold text. Keep your answer under 400 words.
 
-${webContext ? `${webContext}\n\nIMPORTANT: You have active live internet search data provided above. Use these live search results to state exact current exam dates, notifications, and application schedules with total confidence. Do NOT say you lack internet or live access.` : ''}
+${webContext ? `${webContext}\n\nUse the live search results above for all dates, schedules, and vacancies.` : ''}
 
-=== MANDATORY RULES ===
-1. If LIVE REAL-TIME GOOGLE SEARCH RESULTS are provided above, PRIORITISE them for all exam notifications, application dates, prelims/mains dates, eligibility, and current affairs.
-2. If textbook study material is provided below, use it for formulas, concepts, syllabus topics, and exam preparation strategies.
-3. Format all timelines, exam patterns, marks distributions, and subjects into beautiful, readable Markdown tables.
-4. Keep your answer structured, clear, and encouraging. Use LaTeX math notation ($x$ or $$x$$) for formulas if applicable.
-
-=== STUDY MATERIAL CONTEXT (Book Chapters) ===
+=== STUDY MATERIAL CONTEXT ===
 ${context || 'No specific textbook chapter context needed for this query.'}
 `;
 
   try {
     const response = await callLLM(model, systemPrompt, question);
-    return {
-      response,
-      sources: [...webSources, ...sources]
-    };
+    if (!response.includes('All AI channels are temporarily busy')) {
+      return {
+        response,
+        sources: [...webSources, ...sources]
+      };
+    }
   } catch (error: any) {
-    console.error('Error generating answer in rag:', error);
-    return {
-      response: webText || `Failed to generate answer: ${error.message}`,
-      sources: webSources
-    };
+    console.error('Error in callLLM:', error.message);
   }
+
+  // Graceful intelligent fallback from local curated textbook chapters & exam templates
+  const fallbackAnswer = generateOfflineStudyResponse(question, context, sources);
+  return {
+    response: fallbackAnswer,
+    sources: [...webSources, ...sources]
+  };
+}
+
+function generateOfflineStudyResponse(question: string, context: string, sources: Source[]): string {
+  const q = question.toLowerCase();
+
+  // SSC CGL Exam Information
+  if (q.includes('ssc') && (q.includes('cgl') || q.includes('exam') || q.includes('pattern') || q.includes('date'))) {
+    return `# 🏛️ SSC CGL Examination Overview & Schedule
+
+### 📅 Expected Exam Timeline (Annual Cycle)
+| Stage | Typical Schedule |
+|---|---|
+| **Official Notification** | June / July |
+| **Online Application Window** | July – August |
+| **Tier 1 (Prelims Exam)** | September – October |
+| **Tier 2 (Mains Exam)** | December – January |
+
+---
+
+### 📝 SSC CGL Tier 1 Exam Pattern
+| Section | Questions | Marks | Duration |
+|---|---:|---:|---:|
+| General Intelligence & Reasoning | 25 | 50 | 60 mins |
+| General Awareness | 25 | 50 | (combined) |
+| Quantitative Aptitude | 25 | 50 | |
+| English Comprehension | 25 | 50 | |
+| **Total** | **100** | **200** | **60 mins** |
+
+- **Negative Marking:** $-0.50$ marks per incorrect answer.
+- **Official Portal:** [ssc.gov.in](https://ssc.gov.in/)`;
+  }
+
+  // IBPS PO Exam Information
+  if (q.includes('ibps') || (q.includes('po') && (q.includes('bank') || q.includes('exam')))) {
+    return `# 🏦 IBPS PO Examination Overview & Schedule
+
+### 📅 Expected Exam Timeline (Annual Cycle)
+| Stage | Typical Schedule |
+|---|---|
+| **Official Notification** | July / August |
+| **Online Application** | August – September |
+| **Prelims Exam** | October |
+| **Mains Exam** | November |
+| **Interview** | January / February |
+
+---
+
+### 📝 IBPS PO Prelims Pattern
+| Section | Questions | Marks | Time |
+|---|---:|---:|---:|
+| English Language | 30 | 30 | 20 mins |
+| Quantitative Aptitude | 35 | 35 | 20 mins |
+| Reasoning Ability | 35 | 35 | 20 mins |
+| **Total** | **100** | **100** | **60 mins** |
+
+- **Negative Marking:** $-0.25$ marks per wrong answer.
+- **Official Portal:** [ibps.in](https://www.ibps.in/)`;
+  }
+
+  // RRB NTPC Exam Information
+  if (q.includes('rrb') || q.includes('railway') || q.includes('ntpc')) {
+    return `# 🚂 RRB NTPC Examination Overview & Schedule
+
+### 📝 CBT-1 Exam Pattern
+| Section | Questions | Marks | Duration |
+|---|---:|---:|---:|
+| General Awareness | 40 | 40 | 90 mins |
+| Mathematics | 30 | 30 | (combined) |
+| General Intelligence & Reasoning | 30 | 30 | |
+| **Total** | **100** | **100** | **90 mins** |
+
+- **Negative Marking:** $1/3$ mark deducted per wrong answer.
+- **Official Portal:** [rrbapply.gov.in](https://rrbapply.gov.in/)`;
+  }
+
+  // If textbook chapter context was retrieved, provide a structured summary
+  if (context && context.trim().length > 100) {
+    return `### 📚 Study Guide & Concept Summary
+
+Here is the relevant theory and concepts from your textbook syllabus:
+
+${context.replace(/\[Source:[^\]]+\]/g, '').substring(0, 1500)}
+
+---
+💡 *Tip: You can ask specific questions about any of the formulas, rules, or practice problems above!*`;
+  }
+
+  // General Guidance
+  return `### 📖 Exam Preparation Guidance
+
+For competitive exams (SSC, Banking, Railways, State PSCs), here are the core focus pillars:
+
+| Subject | Key Focus Areas |
+|---|---|
+| **Quantitative Aptitude** | Percentage, SI/CI, Profit & Loss, Time & Work, Speed Distance Time, Algebra |
+| **Reasoning Ability** | Syllogism, Puzzles, Seating Arrangement, Coding-Decoding, Blood Relations |
+| **English Language** | Grammar Rules, Error Spotting, Reading Comprehension, Vocabulary |
+| **General Awareness** | Current Affairs (last 6 months), Indian Polity, History, Science |
+
+Please specify your target exam or topic, and I will provide formulas, shortcuts, and practice questions!`;
 }
