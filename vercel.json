@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd study-tutor && npm run build",
+  "outputDirectory": "study-tutor/.next",
+  "framework": "nextjs"
+}
