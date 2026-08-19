@@ -1,21 +1,11 @@
 import { UnifiedSearchAdapter } from '../search/unifiedSearch';
-import { AgentContext, AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
+import { AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
 
 export class WebResearchWorker implements DomainAgentPlugin {
-  public readonly key = 'web_research_worker';
+  public readonly key = 'web_research';
   public readonly name = 'Real-Time Web Grounding & Fact Checker';
-  public readonly description = 'Searches the live web across Google, Brave, and Keyless sources to verify fresh facts and recent circulars.';
-  public readonly domainCategory = 'WEB_RESEARCH' as const;
-
-  evaluateSuitability(query: string, context: AgentContext): number {
-    const q = query.toLowerCase();
-
-    if (/\b(current affairs|latest news|today|recent|2026 update|press release|circular|official notice)\b/i.test(q)) {
-      return 95;
-    }
-
-    return 30; // fallback if other workers aren't confident
-  }
+  public readonly description = 'Searches the live web across Google, Brave, and Keyless sources for real-time news, fresh circulars, or current affairs.';
+  public readonly domainCategory = 'WEB_RESEARCH';
 
   async execute(params: AgentExecutionParams): Promise<WorkerResult> {
     const { instruction } = params;
@@ -26,6 +16,7 @@ export class WebResearchWorker implements DomainAgentPlugin {
       success: true,
       workerId: this.key,
       data: {
+        query: instruction,
         provider: searchRes.provider,
         summary: searchRes.text,
         searchResults: searchRes.results

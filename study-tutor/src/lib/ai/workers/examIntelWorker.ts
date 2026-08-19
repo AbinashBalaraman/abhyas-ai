@@ -1,48 +1,17 @@
-import { AgentContext, AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
+import { AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
 
 export class ExamIntelWorker implements DomainAgentPlugin {
-  public readonly key = 'exam_intel_worker';
+  public readonly key = 'exam_intel';
   public readonly name = 'Exam Intelligence Specialist';
-  public readonly description = 'Retrieves official examination schedules, notification releases, admit card links, and vacancies.';
-  public readonly domainCategory = 'EXAM_INTEL' as const;
-
-  evaluateSuitability(query: string, context: AgentContext): number {
-    const q = query.trim().toLowerCase();
-    const historyText = (context.history || []).map(m => m.content.toLowerCase()).join(' ');
-
-    // Reject greetings
-    if (/^(hi|hello|hey|greetings|namaste|thanks|thank\s*you|ok|okay|bye)\b/i.test(q)) {
-      return 0;
-    }
-
-    if (q.length <= 3 && !/\d/.test(q)) {
-      return 0;
-    }
-
-    // High suitability keywords
-    if (/\b(notification|admit card|exam date|dates|when is|schedule|calendar|vacancy|vacancies|apply online|cutoff|eligibility)\b/i.test(q)) {
-      return 95;
-    }
-
-    if (/\b(ibps|sbi|ssc|rrb|upsc|cgl|chsl|ntpc|po|clerk)\b/i.test(q)) {
-      return 85;
-    }
-
-    // Pronoun follow-up check (e.g. "when next exam" with prior exam context)
-    if ((q.includes('next') || q.includes('when') || q.includes('exam')) && (historyText.includes('po') || historyText.includes('cgl') || historyText.includes('ssc') || historyText.includes('ibps'))) {
-      return 90;
-    }
-
-    return 0;
-  }
+  public readonly description = 'Retrieves official examination schedules, notification releases, admit card download links, and vacancy stats for Indian competitive exams (IBPS, SBI, SSC, RRB, UPSC).';
+  public readonly domainCategory = 'EXAM_INTEL';
 
   async execute(params: AgentExecutionParams): Promise<WorkerResult> {
-    const { instruction, context } = params;
+    const { instruction } = params;
     const q = instruction.toLowerCase();
-    const historyText = (context.history || []).map(m => m.content.toLowerCase()).join(' ');
 
     // 1. IBPS PO
-    if (q.includes('ibps') || (q.includes('po') && !q.includes('sbi')) || (historyText.includes('ibps') && (q.includes('next') || q.includes('when')))) {
+    if (q.includes('ibps') || q.includes('crp') || (q.includes('po') && !q.includes('sbi'))) {
       return {
         success: true,
         workerId: this.key,
@@ -63,7 +32,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
     }
 
     // 2. SBI PO
-    if (q.includes('sbi') || (historyText.includes('sbi') && (q.includes('next') || q.includes('when')))) {
+    if (q.includes('sbi')) {
       return {
         success: true,
         workerId: this.key,
@@ -83,8 +52,8 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 3. SSC CGL
-    if (q.includes('ssc') || q.includes('cgl') || q.includes('chsl') || (historyText.includes('ssc') && (q.includes('next') || q.includes('when')))) {
+    // 3. SSC CGL / CHSL
+    if (q.includes('ssc') || q.includes('cgl') || q.includes('chsl')) {
       return {
         success: true,
         workerId: this.key,
@@ -104,7 +73,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 4. RRB NTPC
+    // 4. RRB NTPC / Railway
     if (q.includes('rrb') || q.includes('railway') || q.includes('ntpc')) {
       return {
         success: true,
@@ -124,16 +93,16 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 5. Master Annual Calendar
+    // 5. Default Comprehensive Exam Calendar
     return {
       success: true,
       workerId: this.key,
       data: {
         calendar: [
-          { exam: 'IBPS PO 2026', notification: 'July 1', admitCard: 'Aug 14', examDate: 'Aug 22-23, 2026' },
-          { exam: 'SSC CGL 2026', notification: 'June 24', admitCard: 'Late Aug', examDate: 'Sept 9-26, 2026' },
-          { exam: 'SBI PO 2026', notification: 'Sept 2026', admitCard: 'Oct/Nov', examDate: 'Nov 2026' },
-          { exam: 'RRB NTPC 2026', notification: 'Sept 2026', admitCard: 'Nov/Dec', examDate: 'Dec 2026 - Jan 2027' }
+          { exam: 'IBPS PO 2026', notification: 'July 1', admitCard: 'Aug 14', examDate: 'Aug 22-23, 2026', portal: 'ibps.in' },
+          { exam: 'SSC CGL 2026', notification: 'June 24', admitCard: 'Late Aug', examDate: 'Sept 9-26, 2026', portal: 'ssc.gov.in' },
+          { exam: 'SBI PO 2026', notification: 'Sept 2026', admitCard: 'Oct/Nov', examDate: 'Nov 2026', portal: 'sbi.co.in' },
+          { exam: 'RRB NTPC 2026', notification: 'Sept 2026', admitCard: 'Nov/Dec', examDate: 'Dec 2026 - Jan 2027', portal: 'rrbapply.gov.in' }
         ]
       },
       sources: [{

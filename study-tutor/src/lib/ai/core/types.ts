@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export interface Source {
   title: string;
   subject: string;
@@ -31,7 +29,7 @@ export interface WorkerResult<T = any> {
   error?: string;
 }
 
-export interface AgentExecutionParams<TInput = Record<string, unknown>> {
+export interface AgentExecutionParams<TInput = Record<string, any>> {
   sessionId: string;
   instruction: string;
   inputData: TInput;
@@ -43,34 +41,28 @@ export interface DomainAgentPlugin<TInput = any, TOutput = any> {
   readonly key: string;
   readonly name: string;
   readonly description: string;
-  readonly domainCategory: 'EXAM_INTEL' | 'KNOWLEDGE_RAG' | 'QUIZ_EXAMINER' | 'WEB_RESEARCH' | 'GENERAL';
+  readonly domainCategory: string;
   
-  // Dynamic Suitability Evaluator (Scores query from 0 to 100)
-  evaluateSuitability: (query: string, context: AgentContext) => number;
-  
-  // Isolated execution
+  // Pure execution logic (decided by the Master LLM)
   execute: (params: AgentExecutionParams<TInput>) => Promise<WorkerResult<TOutput>>;
 }
 
-export interface AgentTask {
-  id: string;
-  agentKey: string;
+export interface MasterPlanTask {
+  subagent: string;
   instruction: string;
-  inputData: Record<string, any>;
-  status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
-  result?: any;
-  error?: string;
-  retryCount: number;
+}
+
+export interface MasterPlan {
+  thought: string;
+  action: 'direct_chat' | 'call_subagent' | 'parallel_call';
+  tasks: MasterPlanTask[];
 }
 
 export interface OrchestratorState {
   sessionId: string;
   userPrompt: string;
-  plan: {
-    strategy: string;
-    tasks: AgentTask[];
-  };
-  currentStep: 'PLANNING' | 'DISPATCHING' | 'EVALUATING' | 'SYNTHESIZING' | 'COMPLETE' | 'ERROR';
+  plan: MasterPlan;
+  currentStep: 'PLANNING' | 'DISPATCHING' | 'SYNTHESIZING' | 'COMPLETE' | 'ERROR';
   executionHistory: Array<{
     step: string;
     timestamp: number;

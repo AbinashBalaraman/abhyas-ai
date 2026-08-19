@@ -1,21 +1,11 @@
 import { searchKnowledgeBase } from '../knowledgeBase';
-import { AgentContext, AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
+import { AgentExecutionParams, DomainAgentPlugin, WorkerResult } from '../core/types';
 
 export class QuizGeneratorWorker implements DomainAgentPlugin {
-  public readonly key = 'quiz_generator_worker';
+  public readonly key = 'quiz_generator';
   public readonly name = 'Interactive Practice & Quiz Examiner';
-  public readonly description = 'Generates competitive exam MCQs, timed practice sets, and detailed step-by-step answer keys.';
-  public readonly domainCategory = 'QUIZ_EXAMINER' as const;
-
-  evaluateSuitability(query: string, context: AgentContext): number {
-    const q = query.toLowerCase();
-
-    if (/\b(quiz|mock|mcq|practice question|practice questions|test me|sample questions|solve question|test my knowledge)\b/i.test(q)) {
-      return 100;
-    }
-
-    return 0;
-  }
+  public readonly description = 'Generates competitive exam MCQs with 4 options, timed practice sets, and detailed step-by-step answer keys.';
+  public readonly domainCategory = 'QUIZ_EXAMINER';
 
   async execute(params: AgentExecutionParams): Promise<WorkerResult> {
     const { instruction } = params;
@@ -25,7 +15,7 @@ export class QuizGeneratorWorker implements DomainAgentPlugin {
       success: true,
       workerId: this.key,
       data: {
-        mode: 'PRACTICE_QUIZ',
+        topic: instruction,
         referenceTheory: docs.map(d => d.content.substring(0, 1000)).join('\n\n')
       },
       sources: docs.map(d => ({

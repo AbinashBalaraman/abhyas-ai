@@ -1,12 +1,11 @@
 import { AgentRegistry } from './registry';
 import { SessionMemoryManager } from './memory';
 import { MultiTierModelGateway } from './gateway';
-import { AgentContext, AgentTask, OrchestratorState, Source, WorkerResult } from './types';
+import { AgentContext, MasterPlan, OrchestratorState, Source, WorkerResult } from './types';
 import { ExamIntelWorker } from '../workers/examIntelWorker';
 import { KnowledgeRAGWorker } from '../workers/knowledgeRAGWorker';
 import { QuizGeneratorWorker } from '../workers/quizGeneratorWorker';
 import { WebResearchWorker } from '../workers/webResearchWorker';
-import { GeneralChatWorker } from '../workers/generalChatWorker';
 
 export class MasterSupervisorOrchestrator {
   private static instance: MasterSupervisorOrchestrator;
@@ -31,7 +30,6 @@ export class MasterSupervisorOrchestrator {
 
   private initializeRegistry(): void {
     if (this.isInitialized) return;
-    this.registry.register(new GeneralChatWorker());
     this.registry.register(new ExamIntelWorker());
     this.registry.register(new KnowledgeRAGWorker());
     this.registry.register(new QuizGeneratorWorker());
@@ -40,12 +38,12 @@ export class MasterSupervisorOrchestrator {
   }
 
   /**
-   * Main Supervisor Pipeline:
+   * Pure Master LLM Supervisor Pipeline:
    * 1. Load Session Context
-   * 2. Planning & Worker Selection (Checks Greetings & Domain Suitability)
-   * 3. Parallel Worker Dispatch (Fan-out / Fan-in)
-   * 4. Multi-Agent Synthesis with Cascading Model Gateway
-   * 5. State Checkpoint & Memory Append
+   * 2. Pure LLM Planning (The Thinker) -> generates MasterPlan JSON dynamically
+   * 3. Sub-Agent Execution (The Executor) -> parallel dispatch
+   * 4. Multi-Agent Response Synthesis
+   * 5. State Checkpoint & Memory Update
    */
   async process(
     userPrompt: string,
@@ -57,70 +55,46 @@ export class MasterSupervisorOrchestrator {
     // 1. Load context from Memory Manager
     const context = await this.memory.getContext(sessionId, 6);
 
-    // 2. Fast Path / Planning: Evaluate candidates
-    const candidates = this.registry.findBestCandidates(cleanPrompt, context);
-
-    // Select up to top 2 workers
-    let selectedWorkers = candidates.slice(0, 2);
-
-    // If no candidate scored > 0, fallback to general_chat_worker (if short) or knowledge_rag_worker (if academic query)
-    if (selectedWorkers.length === 0) {
-      if (cleanPrompt.length <= 15) {
-        const chatWorker = this.registry.getAgent('general_chat_worker');
-        if (chatWorker) selectedWorkers.push({ agent: chatWorker, score: 50 });
-      } else {
-        const defaultWorker = this.registry.getAgent('knowledge_rag_worker');
-        if (defaultWorker) selectedWorkers.push({ agent: defaultWorker, score: 50 });
-      }
-    }
-
-    const tasks: AgentTask[] = selectedWorkers.map(w => ({
-      id: crypto.randomUUID(),
-      agentKey: w.agent.key,
-      instruction: cleanPrompt,
-      inputData: { query: cleanPrompt },
-      status: 'PENDING',
-      retryCount: 0
-    }));
+    // 2. Pure LLM Planning Call (The Thinker)
+    const plan = await this.generateMasterPlan(cleanPrompt, context, preferredModel);
 
     let state: OrchestratorState = {
       sessionId,
       userPrompt: cleanPrompt,
-      plan: {
-        strategy: `Multi-Agent Dispatch: [${selectedWorkers.map(s => s.agent.name).join(', ')}]`,
-        tasks
-      },
+      plan,
       currentStep: 'DISPATCHING',
-      executionHistory: [{ step: 'PLANNING', timestamp: Date.now(), payload: tasks }],
+      executionHistory: [{ step: 'PLANNING', timestamp: Date.now(), payload: plan }],
       sources: []
     };
 
-    // 3. Parallel Worker Dispatch (Fan-out / Fan-in)
-    const workerPromises = tasks.map(async (task): Promise<WorkerResult> => {
-      const worker = this.registry.getAgent(task.agentKey);
-      if (!worker) {
-        return { success: false, workerId: task.agentKey, data: null, sources: [], error: 'Worker not found' };
-      }
-      return worker.execute({
-        sessionId,
-        instruction: task.instruction,
-        inputData: task.inputData,
-        context
-      });
-    });
-
-    const settledResults = await Promise.allSettled(workerPromises);
+    // 3. Sub-Agent Execution (The Executor)
     const workerOutputs: WorkerResult[] = [];
     const aggregatedSources: Source[] = [];
 
-    settledResults.forEach(r => {
-      if (r.status === 'fulfilled' && r.value.success) {
-        workerOutputs.push(r.value);
-        if (r.value.sources) {
-          aggregatedSources.push(...r.value.sources);
+    if (plan.action !== 'direct_chat' && plan.tasks && plan.tasks.length > 0) {
+      const taskPromises = plan.tasks.map(async (task): Promise<WorkerResult> => {
+        const worker = this.registry.getAgent(task.subagent);
+        if (!worker) {
+          return { success: false, workerId: task.subagent, data: null, sources: [], error: 'Sub-agent not found' };
         }
-      }
-    });
+        return worker.execute({
+          sessionId,
+          instruction: task.instruction || cleanPrompt,
+          inputData: { instruction: task.instruction },
+          context
+        });
+      });
+
+      const settled = await Promise.allSettled(taskPromises);
+      settled.forEach(r => {
+        if (r.status === 'fulfilled' && r.value.success) {
+          workerOutputs.push(r.value);
+          if (r.value.sources) {
+            aggregatedSources.push(...r.value.sources);
+          }
+        }
+      });
+    }
 
     // Deduplicate sources by path
     const seenPaths = new Set<string>();
@@ -133,17 +107,17 @@ export class MasterSupervisorOrchestrator {
     state.sources = dedupedSources;
     state.currentStep = 'SYNTHESIZING';
 
-    // 4. Multi-Agent Final Synthesis
-    const systemPrompt = this.buildSynthesisSystemPrompt(context);
-    const userPayload = this.buildSynthesisUserPayload(cleanPrompt, workerOutputs);
+    // 4. Response Synthesis Call (The Synthesizer)
+    const systemPrompt = this.buildSynthesisSystemPrompt(context, plan);
+    const userPayload = this.buildSynthesisUserPayload(cleanPrompt, plan, workerOutputs);
 
     const modelResult = await this.gateway.execute(preferredModel, systemPrompt, userPayload);
 
     let finalResponse = modelResult.text;
 
-    // Ensure clean Markdown output
+    // Fallback if model was unreachable or safe-mode
     if (!finalResponse || modelResult.tierUsed === 'TIER3_SAFE_MODE') {
-      finalResponse = this.generateSafeModeSynthesis(cleanPrompt, workerOutputs);
+      finalResponse = this.generateSafeModeSynthesis(cleanPrompt, plan, workerOutputs);
     }
 
     state.finalSynthesis = finalResponse;
@@ -160,85 +134,124 @@ export class MasterSupervisorOrchestrator {
     };
   }
 
-  private buildSynthesisSystemPrompt(context: AgentContext): string {
-    return `You are Abhyas AI, the Master Study & Exam Tutor powered by a Multi-Agent Orchestrator.
+  /**
+   * Step 1: The Thinker (Pure LLM Intent Reasoning & Planning)
+   */
+  private async generateMasterPlan(
+    query: string,
+    context: AgentContext,
+    preferredModel: string
+  ): Promise<MasterPlan> {
+    const manifest = this.registry.getAgentManifest();
 
-CURRENT REAL-WORLD DATE ANCHOR: August 2026
+    const plannerSystemPrompt = `You are the Master Orchestrator for Abhyas AI, an intelligent study & competitive examination platform.
+CURRENT REAL-WORLD DATE: August 2026
+
+=== AVAILABLE WORKER SUB-AGENTS ===
+${manifest}
+- **'direct_chat'**: Conversational responses, greetings, pleasantries, motivation, study tips, or clarifying questions without querying databases.
+
+=== YOUR OBJECTIVE ===
+Inspect the student's message and conversation history. Reason through the true intent, and output a STRICT JSON planning object.
+
+=== JSON OUTPUT SCHEMA ===
+{
+  "thought": "Brief 1-sentence reasoning explaining what the user wants",
+  "action": "direct_chat" | "call_subagent" | "parallel_call",
+  "tasks": [
+    {
+      "subagent": "exam_intel" | "knowledge_rag" | "quiz_generator" | "web_research",
+      "instruction": "Specific search query or task instruction for the worker"
+    }
+  ]
+}
+
+=== EXAMPLES OF TRUE REASONING ===
+- Student: "hi" or "hello" or "good morning"
+  {"thought": "Student is greeting me. No database lookup needed.", "action": "direct_chat", "tasks": []}
+
+- Student: "when is ibps po exam next"
+  {"thought": "Student wants upcoming dates and admit card info for IBPS PO.", "action": "call_subagent", "tasks": [{"subagent": "exam_intel", "instruction": "ibps po 2026 exam dates and admit card"}]}
+
+- Student: "explain compound interest formula and derive it"
+  {"thought": "Student wants conceptual explanation and formula derivation for Compound Interest.", "action": "call_subagent", "tasks": [{"subagent": "knowledge_rag", "instruction": "Compound interest formula and derivation"}]}
+
+- Student: "explain percentages and give me 3 practice MCQs"
+  {"thought": "Student has a hybrid request: concept explanation and practice MCQs.", "action": "parallel_call", "tasks": [{"subagent": "knowledge_rag", "instruction": "Percentage concept and formulas"}, {"subagent": "quiz_generator", "instruction": "3 percentage practice MCQs"}]}
+
+- Student: "thank you so much!"
+  {"thought": "Student is expressing gratitude.", "action": "direct_chat", "tasks": []}
+
+Output ONLY valid JSON. No conversational text in this step.`;
+
+    const historySnippet = (context.history || []).slice(-4).map(m => `${m.role}: ${m.content}`).join('\n');
+    const plannerUserMessage = `${historySnippet ? `[Recent Chat History]:\n${historySnippet}\n\n` : ''}STUDENT CURRENT MESSAGE: "${query}"`;
+
+    try {
+      const planResult = await this.gateway.execute(preferredModel, plannerSystemPrompt, plannerUserMessage);
+      const cleaned = (planResult.text || '').replace(/```json\n?|\n?```/g, '').trim();
+      const parsed = JSON.parse(cleaned) as MasterPlan;
+
+      if (parsed.action && Array.isArray(parsed.tasks)) {
+        return parsed;
+      }
+    } catch (e: any) {
+      console.warn('[MasterSupervisor] LLM planning parser fallback:', e.message);
+    }
+
+    // Default intelligent fallback if JSON parsing failed
+    return {
+      thought: 'Autonomous fallback routing',
+      action: query.length < 15 ? 'direct_chat' : 'call_subagent',
+      tasks: query.length < 15 ? [] : [{ subagent: 'knowledge_rag', instruction: query }]
+    };
+  }
+
+  private buildSynthesisSystemPrompt(context: AgentContext, plan: MasterPlan): string {
+    return `You are Abhyas AI, the Master Study & Exam Tutor.
+CURRENT REAL-WORLD DATE: August 2026
 
 === YOUR MISSION & INSTRUCTIONS ===
-1. You receive verified structured payloads generated by specialized domain sub-agents (General Chat, Exam Intel, Knowledge RAG, Quiz Examiner, Web Research).
-2. If the user is saying "hi", "hello", or greeting, respond with a warm, helpful greeting explaining how you can help them prepare for exams. DO NOT dump any chapter syllabus.
+1. Synthesize a clean, student-centric response based on the Master Plan: "${plan.thought}".
+2. If the user is greeting or having casual chat, respond warmly as an encouraging, expert tutor.
 3. For Math / Formulas: Use LaTeX delimiters \\(...\\) for inline and \\[...\\] for display equations.
 4. For Exam Schedules: Use clean Markdown tables with exact dates and official portal links.
-5. For Practice Questions: Provide 4 options, the correct answer, and an elegant step-by-step proof/solution.
-6. NEVER contradict the verified data provided in the SUB-AGENT PAYLOAD.
-7. Keep responses concise, high-yield, and strictly under 400 words.
-
-=== FEW-SHOT EXEMPLARS ===
-
-User: "hi"
-Assistant:
-👋 **Hello! Welcome to Abhyas AI**, your dedicated exam tutor.
-
-How can I help your study journey today?
-- 📅 **Upcoming Exam Dates & Notifications** (IBPS PO, SBI PO, SSC CGL, RRB NTPC)
-- 📚 **Concept Explanations & Formulas** (Quant, Reasoning, English, General Awareness)
-- 📝 **Practice MCQs & Topic Quizzes**
-- 🔍 **Live Current Affairs & Official Circulars**
-
-Let me know what topic you'd like to dive into! 🎯
-
-User: "when is ibps po exam next"
-Assistant:
-# 🏦 IBPS PO 2026 – Next Upcoming Events
-
-| Event | Date / Details |
-|---|---|
-| **Prelims Exam** | **August 22 & 23, 2026** (this weekend) |
-| Prelims Admit Card | Already Released (August 14, 2026) |
-| **Mains Exam** | **October 4, 2026** |
-| Official Portal | [ibps.in](https://www.ibps.in/) |
-
-**Preparation Tip:** Speed & accuracy in Quantitative Aptitude and Reasoning will determine your qualifying rank. Good luck! 🎯`;
+5. For Practice Questions: Provide 4 options, the correct answer, and an elegant step-by-step solution.
+6. NEVER contradict the verified data provided by sub-agents.
+7. Keep responses concise, high-yield, and under 400 words.`;
   }
 
-  private buildSynthesisUserPayload(query: string, results: WorkerResult[]): string {
-    return `STUDENT QUERY: "${query}"
-
-=== VERIFIED SUB-AGENT RETRIEVED DATA ===
-${results.map(r => `[Worker: ${r.workerId}]\n${JSON.stringify(r.data, null, 2)}`).join('\n\n')}
-
-Please synthesize the final tutor response for the student based strictly on the verified data above.`;
-  }
-
-  private generateSafeModeSynthesis(query: string, results: WorkerResult[]): string {
-    const chatWorker = results.find(r => r.workerId === 'general_chat_worker');
-    if (chatWorker?.data?.reply) {
-      return chatWorker.data.reply;
+  private buildSynthesisUserPayload(query: string, plan: MasterPlan, results: WorkerResult[]): string {
+    if (plan.action === 'direct_chat' || results.length === 0) {
+      return `STUDENT QUERY: "${query}"\n(Plan: Direct conversational assistance)`;
     }
 
-    const examWorker = results.find(r => r.workerId === 'exam_intel_worker');
+    return `STUDENT QUERY: "${query}"
+PLAN: ${plan.thought}
+
+=== RETRIEVED SUB-AGENT DATA ===
+${results.map(r => `[Sub-Agent: ${r.workerId}]\n${JSON.stringify(r.data, null, 2)}`).join('\n\n')}
+
+Synthesize the final tutor response for the student based strictly on the verified data above.`;
+  }
+
+  private generateSafeModeSynthesis(query: string, plan: MasterPlan, results: WorkerResult[]): string {
+    if (plan.action === 'direct_chat') {
+      return `👋 **Hello! I am Abhyas AI**, your personal study & exam tutor.\n\nHow can I help your preparation today?\n- 📅 **Upcoming Exam Dates & Notices**\n- 📚 **Concept Learning & Formulas**\n- 📝 **Practice MCQs & Quizzes**\n\nLet me know what topic you would like to work on! 🎯`;
+    }
+
+    const examWorker = results.find(r => r.workerId === 'exam_intel');
     if (examWorker?.data?.examTitle) {
       const d = examWorker.data;
-      return `# 🏦 ${d.examTitle} Official Schedule
-
-| Event | Official Date / Status |
-|---|---|
-| Notification | ${d.notification || 'Released'} |
-| Admit Card | ${d.admitCard || 'Released'} |
-| Prelims Exam | **${d.prelimsDates || 'Scheduled'}** |
-| Mains Exam | ${d.mainsDate || 'Upcoming'} |
-| Official Portal | [${d.portal}](${d.portal}) |
-
-All candidates should download their call letter directly from the official portal.`;
+      return `# 🏦 ${d.examTitle} Schedule\n\n| Event | Date / Details |\n|---|---|\n| Prelims Exam | **${d.prelimsDates || 'Scheduled'}** |\n| Admit Card | ${d.admitCard || 'Released'} |\n| Mains Exam | ${d.mainsDate || 'Upcoming'} |\n| Official Portal | [${d.portal}](${d.portal}) |`;
     }
 
-    const ragWorker = results.find(r => r.workerId === 'knowledge_rag_worker');
+    const ragWorker = results.find(r => r.workerId === 'knowledge_rag');
     if (ragWorker?.data?.documents?.[0]) {
       const doc = ragWorker.data.documents[0];
       return `### 📚 ${doc.title} (${doc.subject})\n\n${doc.content.substring(0, 1000)}...`;
     }
 
-    return `👋 Hello! How can I assist you with your exam preparation today?`;
+    return `Here is the verified information for **${query}**.\nPlease refer to the sources below.`;
   }
 }
