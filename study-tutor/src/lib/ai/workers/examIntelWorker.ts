@@ -18,24 +18,23 @@ export class ExamIntelWorker implements DomainAgentPlugin {
     let activeExam: 'UPSC' | 'SSC' | 'SBI' | 'IBPS' | 'RRB' | 'GENERAL' = 'GENERAL';
 
     for (const turn of turns) {
-      const t = turn.toLowerCase();
-      if (t.includes('upsc') || t.includes('ias') || t.includes('ips') || t.includes('civil services') || t.includes('csat')) {
+      if (/\b(upsc|ias|ips|civil services|cse|csat)\b/i.test(turn)) {
         activeExam = 'UPSC';
         break;
       }
-      if (t.includes('ssc') || t.includes('cgl') || t.includes('chsl') || t.includes('staff selection') || t.includes('cpo')) {
+      if (/\b(ssc|cgl|chsl|staff selection|cpo)\b/i.test(turn)) {
         activeExam = 'SSC';
         break;
       }
-      if (t.includes('sbi') || (t.includes('state bank') && t.includes('po'))) {
+      if (/\b(sbi|state bank)\b/i.test(turn)) {
         activeExam = 'SBI';
         break;
       }
-      if (t.includes('ibps') || (t.includes('po') && !t.includes('sbi'))) {
+      if (/\b(ibps)\b/i.test(turn)) {
         activeExam = 'IBPS';
         break;
       }
-      if (t.includes('rrb') || t.includes('railway') || t.includes('ntpc') || t.includes('cbt')) {
+      if (/\b(rrb|railway|ntpc|cbt)\b/i.test(turn)) {
         activeExam = 'RRB';
         break;
       }

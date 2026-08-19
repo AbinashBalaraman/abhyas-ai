@@ -28,12 +28,22 @@ export class MultiTierModelGateway {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
 
+    // Keep token footprint clean and fast (compact older turns if they exceed 600 chars)
+    const sanitizedMessages: ChatMessage[] = messages.map((m, idx) => {
+      const isLatest = idx === messages.length - 1;
+      if (isLatest || m.content.length <= 600) return m;
+      return {
+        role: m.role,
+        content: m.content.substring(0, 600) + '...'
+      };
+    });
+
     // 1. Primary: Lightning-fast Gemini Flash-Lite models (sub-1s latency)
     if (geminiKey) {
       const geminiCandidates = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
       for (const gm of geminiCandidates) {
         try {
-          const text = await this.callGeminiDirect(gm, systemPrompt, messages, geminiKey);
+          const text = await this.callGeminiDirect(gm, systemPrompt, sanitizedMessages, geminiKey);
           if (text) {
             return {
               text,
@@ -52,7 +62,7 @@ export class MultiTierModelGateway {
       const openCodeCandidates = ['nemotron-3.5-lightning-free', 'deepseek-v4-flash-free'];
       for (const om of openCodeCandidates) {
         try {
-          const text = await this.callOpenCode(om, systemPrompt, messages, openCodeKey);
+          const text = await this.callOpenCode(om, systemPrompt, sanitizedMessages, openCodeKey);
           if (text) {
             return {
               text,
@@ -120,7 +130,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(5000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
@@ -156,7 +166,7 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
