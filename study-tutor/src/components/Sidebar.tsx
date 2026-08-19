@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 ];
 
 export default function Sidebar() {
-  const [model, setModel] = useState('gemini');
+  const [model, setModel] = useState('deepseek-free');
   const pathname = usePathname();
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function Sidebar() {
             🎓
           </div>
           <h1 className="text-lg font-bold bg-gradient-to-r from-white via-slate-100 to-indigo-300 bg-clip-text text-transparent">
-            Study Guide Tutor
+            Abhyas AI Tutor
           </h1>
         </div>
         
@@ -74,8 +74,8 @@ export default function Sidebar() {
             onChange={(e) => handleModelChange(e.target.value)}
             className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-indigo-400 font-medium focus:outline-none cursor-pointer"
           >
+            <option value="deepseek-free" className="bg-slate-950 text-slate-100">OpenCode Flash (DeepSeek)</option>
             <option value="gemini" className="bg-slate-950 text-slate-100">Google Gemini 2.5 Flash</option>
-            <option value="deepseek-free" className="bg-slate-950 text-slate-100">DeepSeek v4 Flash Free</option>
             <option value="mimo-free" className="bg-slate-950 text-slate-100">Mimo v2.5 Free</option>
             <option value="ollama" className="bg-slate-950 text-slate-100">Local Ollama (Qwen 2.5)</option>
             <option value="mistral" className="bg-slate-950 text-slate-100">Mistral Large (Fallback)</option>
@@ -83,7 +83,7 @@ export default function Sidebar() {
         </div>
 
         <div className="border-t border-slate-800/60 pt-3 text-[10px] text-slate-600 px-2 space-y-0.5">
-          <p>PostgreSQL Database: Connected</p>
+          <p>Multi-LLM RAG Engine: Active</p>
           <p>Next.js 16 + React 19 v2.0.0</p>
         </div>
       </div>

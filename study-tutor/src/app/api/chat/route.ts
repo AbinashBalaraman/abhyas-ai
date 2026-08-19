@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const question = body.question || body.message;
-    const model = body.model || 'gemini';
+    const model = body.model || 'deepseek-free';
     const sessionId = body.sessionId || request.headers.get('x-session-id') || 'default';
     
     if (!question || !question.trim()) {
