@@ -61,9 +61,20 @@ export class MasterSupervisorOrchestrator {
     // 3. Build Natural Conversational Messages
     const systemPrompt = this.buildMasterSystemPrompt(workerResults);
     
+    // Check if the user is asking to solve a preceding problem in this session
+    const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer|solve it|show solution|shortcut formula)\b/i.test(cleanPrompt);
+    let effectiveUserPrompt = cleanPrompt;
+
+    if (isSolvingPrecedingProblem) {
+      const lastAssistantMsg = history.filter(h => h.role === 'assistant').pop()?.content || '';
+      if (lastAssistantMsg) {
+        effectiveUserPrompt = `[CONTEXT: The student wants you to solve the practice problem from your previous response]\nPreceding message containing problem:\n"""\n${lastAssistantMsg}\n"""\nStudent instruction: "${cleanPrompt}"\nPlease provide the complete step-by-step mathematical derivation and shortcut solution with LaTeX formulas.`;
+      }
+    }
+
     const messages: ChatMessage[] = [
       ...history.map(h => ({ role: h.role as 'user' | 'assistant', content: h.content })),
-      { role: 'user', content: cleanPrompt }
+      { role: 'user', content: effectiveUserPrompt }
     ];
 
     // 4. Generate Master LLM Conversational Response
@@ -74,7 +85,7 @@ export class MasterSupervisorOrchestrator {
       finalResponse = `Regarding "${cleanPrompt}": Would you like me to walk through the mark allocation, syllabus breakdown, core concepts, or practice questions?`;
     }
 
-    // 5. Append Turn to Session Memory
+    // 5. Append Turn to Session Memory (save original cleanPrompt for human readability)
     await this.memory.appendTurn(sessionId, 'user', cleanPrompt);
     await this.memory.appendTurn(sessionId, 'assistant', finalResponse, sources);
 
@@ -168,12 +179,20 @@ export class MasterSupervisorOrchestrator {
    * System Prompt instructing the Master Agent to be a natural, human-like mentor
    */
   private buildMasterSystemPrompt(workerResults: WorkerResult[]): string {
-    const verifiedDataBlock = workerResults.length > 0
-      ? `\n=== VERIFIED FACTUAL EXAM & KNOWLEDGE DATA ===\n${workerResults.map(r => `[Tool: ${r.workerId}]\n${JSON.stringify(r.data, null, 2)}`).join('\n\n')}\n`
-      : '';
+    let verifiedDataBlock = '';
+    let activeExamContext = '';
+
+    if (workerResults.length > 0) {
+      const examResult = workerResults.find(r => r.workerId === 'exam_intel');
+      if (examResult && examResult.data?.examTitle) {
+        activeExamContext = `\nCRITICAL CONTEXT: The user is asking about "${examResult.data.examTitle}". Answer specifically for this exam using the verified figures provided below. DO NOT ask which exam they are referring to.\n`;
+      }
+
+      verifiedDataBlock = `\n=== VERIFIED FACTUAL EXAM & KNOWLEDGE DATA ===\n${workerResults.map(r => `[Tool: ${r.workerId}]\n${JSON.stringify(r.data, null, 2)}`).join('\n\n')}\n`;
+    }
 
     return `You are Abhyas AI, an intelligent, empathetic, and highly knowledgeable personal study and competitive exam tutor.
-CURRENT REAL-WORLD DATE: August 2026
+CURRENT REAL-WORLD DATE: August 2026${activeExamContext}
 
 === STRICT CONVERSATIONAL GUIDELINES ===
 1. Speak naturally, warmly, and like an expert human mentor. Maintain seamless conversational continuity across long multi-turn chats.
@@ -182,7 +201,7 @@ CURRENT REAL-WORLD DATE: August 2026
    - If verified factual data for an exam is present in the VERIFIED FACTUAL EXAM & KNOWLEDGE DATA block below, you MUST use that data directly and answer the user's question for that exam immediately.
    - If the student explicitly switches topics (e.g. "Now let's switch to SSC CGL"), immediately switch and answer for the new topic.
 3. STEP-BY-STEP PROBLEM SOLVER:
-   - When a student asks "Solve this problem step by step", "Show me the shortcut", or "What is the answer?", look at the practice question or math problem stated in the immediately preceding message in the conversation history. Provide the complete step-by-step mathematical derivation and the speed shortcut using LaTeX formatting \\(...\\) and \\[...\\].
+   - When a student asks to solve a problem, provide the complete step-by-step mathematical derivation and the speed shortcut using LaTeX formatting \\(...\\) and \\[...\\].
 4. MARK ALLOCATION & EXAM PATTERNS:
    - Provide structured markdown tables for mark allocation (Questions, Marks, Time, Negative Marking, Qualifying vs Merit status).
 5. EXPLORATORY TOPICS:
