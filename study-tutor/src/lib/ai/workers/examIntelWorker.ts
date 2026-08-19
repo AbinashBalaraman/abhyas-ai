@@ -8,11 +8,94 @@ export class ExamIntelWorker implements DomainAgentPlugin {
 
   async execute(params: AgentExecutionParams): Promise<WorkerResult> {
     const { instruction, context } = params;
-    const historyText = (context?.history || []).map(h => h.content).join(' ').toLowerCase();
-    const q = (instruction + ' ' + historyText).toLowerCase();
+    
+    // Find the active exam from the most recent turn backwards (reverse chronological)
+    const turns = [
+      instruction,
+      ...((context?.history || []).slice().reverse().map(h => h.content))
+    ];
 
-    // 1. SSC CGL / CHSL / CPO
-    if (q.includes('ssc') || q.includes('cgl') || q.includes('chsl') || q.includes('staff selection')) {
+    let activeExam: 'UPSC' | 'SSC' | 'SBI' | 'IBPS' | 'RRB' | 'GENERAL' = 'GENERAL';
+
+    for (const turn of turns) {
+      const t = turn.toLowerCase();
+      if (t.includes('upsc') || t.includes('ias') || t.includes('ips') || t.includes('civil services') || t.includes('csat')) {
+        activeExam = 'UPSC';
+        break;
+      }
+      if (t.includes('ssc') || t.includes('cgl') || t.includes('chsl') || t.includes('staff selection') || t.includes('cpo')) {
+        activeExam = 'SSC';
+        break;
+      }
+      if (t.includes('sbi') || (t.includes('state bank') && t.includes('po'))) {
+        activeExam = 'SBI';
+        break;
+      }
+      if (t.includes('ibps') || (t.includes('po') && !t.includes('sbi'))) {
+        activeExam = 'IBPS';
+        break;
+      }
+      if (t.includes('rrb') || t.includes('railway') || t.includes('ntpc') || t.includes('cbt')) {
+        activeExam = 'RRB';
+        break;
+      }
+    }
+
+    // 1. UPSC Civil Services Examination (CSE)
+    if (activeExam === 'UPSC') {
+      return {
+        success: true,
+        workerId: this.key,
+        data: {
+          examTitle: 'UPSC Civil Services Examination (CSE 2026)',
+          officialPortal: 'https://upsc.gov.in/',
+          schedule: {
+            notification: 'February 2026',
+            prelimsDate: 'May 2026',
+            mainsDate: 'September 2026',
+            interviewDate: 'January – April 2027'
+          },
+          markAllocation: {
+            prelims: {
+              totalMarks: 400,
+              papers: [
+                { paper: 'GS Paper I', questions: 100, marks: 200, negativeMarking: '1/3rd (0.66 marks)', nature: 'Rank-determining for Mains' },
+                { paper: 'GS Paper II (CSAT)', questions: 80, marks: 200, negativeMarking: '1/3rd (0.83 marks)', nature: 'Qualifying (Min 33% / 66 marks required)' }
+              ]
+            },
+            mains: {
+              totalMarks: 1750,
+              description: '9 Descriptive Papers: 2 Qualifying Language Papers (Paper A & B, 300 marks each, min 25% required) + 7 Merit Papers (250 marks each = 1,750 marks)',
+              papersList: [
+                { paper: 'Paper I (Essay)', marks: 250 },
+                { paper: 'Paper II (GS I: Indian Heritage, Culture, History & Geography)', marks: 250 },
+                { paper: 'Paper III (GS II: Governance, Constitution, Polity, Social Justice & IR)', marks: 250 },
+                { paper: 'Paper IV (GS III: Technology, Economic Dev, Biodiversity, Security)', marks: 250 },
+                { paper: 'Paper V (GS IV: Ethics, Integrity & Aptitude)', marks: 250 },
+                { paper: 'Paper VI (Optional Subject - Paper 1)', marks: 250 },
+                { paper: 'Paper VII (Optional Subject - Paper 2)', marks: 250 }
+              ]
+            },
+            interview: {
+              marks: 275,
+              grandTotalMerit: '2,025 Marks (Mains 1750 + Interview 275)'
+            }
+          },
+          eligibility: {
+            ageLimit: '21 to 32 years (General category: 6 attempts; OBC: 9 attempts up to 35 years; SC/ST: unlimited attempts up to 37 years)',
+            education: "Graduation degree in any discipline from a recognized university"
+          }
+        },
+        sources: [{
+          title: 'Union Public Service Commission (Official Examination Scheme)',
+          subject: 'UPSC CSE Mark Allocation & Examination Pattern',
+          path: 'https://upsc.gov.in/'
+        }]
+      };
+    }
+
+    // 2. SSC CGL / CHSL
+    if (activeExam === 'SSC') {
       return {
         success: true,
         workerId: this.key,
@@ -29,7 +112,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
             tier1: {
               totalQuestions: 100,
               totalMarks: 200,
-              duration: '60 minutes (80 mins for scribe candidates)',
+              duration: '60 minutes',
               negativeMarking: '0.50 marks deducted per wrong answer',
               sections: [
                 { subject: 'General Intelligence & Reasoning', questions: 25, marks: 50 },
@@ -91,8 +174,8 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 2. SBI PO (State Bank of India Probationary Officer)
-    if (q.includes('sbi') || (q.includes('state bank') && q.includes('po'))) {
+    // 3. SBI PO (State Bank of India Probationary Officer)
+    if (activeExam === 'SBI') {
       return {
         success: true,
         workerId: this.key,
@@ -144,7 +227,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
             }
           },
           eligibility: {
-            ageLimit: '21 to 30 years (as on specified cutoff date)',
+            ageLimit: '21 to 30 years (General category: 4 attempts for Prelims)',
             education: "Graduation in any discipline from a recognized University or equivalent"
           }
         },
@@ -156,8 +239,8 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 3. IBPS PO (Institute of Banking Personnel Selection)
-    if (q.includes('ibps') || (q.includes('po') && !q.includes('sbi'))) {
+    // 4. IBPS PO
+    if (activeExam === 'IBPS') {
       return {
         success: true,
         workerId: this.key,
@@ -209,8 +292,8 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 4. RRB NTPC (Railway Recruitment Boards Non-Technical Popular Categories)
-    if (q.includes('rrb') || q.includes('railway') || q.includes('ntpc')) {
+    // 5. RRB NTPC
+    if (activeExam === 'RRB') {
       return {
         success: true,
         workerId: this.key,
@@ -226,14 +309,14 @@ export class ExamIntelWorker implements DomainAgentPlugin {
             cbt1: {
               totalQuestions: 100,
               totalMarks: 100,
-              duration: '90 minutes (120 mins for PwBD candidates)',
+              duration: '90 minutes',
               negativeMarking: '1/3rd (0.33 marks) deducted for each incorrect answer',
               sections: [
                 { subject: 'General Awareness', questions: 40, marks: 40 },
                 { subject: 'Mathematics', questions: 30, marks: 30 },
                 { subject: 'General Intelligence & Reasoning', questions: 30, marks: 30 }
               ],
-              nature: 'Screening exam to shortlist candidates for CBT 2 (Normalized score used)'
+              nature: 'Screening exam to shortlist candidates for CBT 2'
             },
             cbt2: {
               totalQuestions: 120,
@@ -246,8 +329,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
                 { subject: 'General Intelligence & Reasoning', questions: 35, marks: 35 }
               ],
               nature: 'Scores used directly for final merit listing'
-            },
-            subsequentStages: 'Computer Based Aptitude Test (CBAT) for Station Master / Traffic Assistant; Typing Skill Test for Clerks/Typists; followed by Document Verification & Medical Exam'
+            }
           },
           eligibility: {
             undergraduatePosts: '12th pass (Age 18–30/33)',
@@ -262,60 +344,7 @@ export class ExamIntelWorker implements DomainAgentPlugin {
       };
     }
 
-    // 5. UPSC Civil Services Examination (CSE)
-    if (q.includes('upsc') || q.includes('ias') || q.includes('civil services')) {
-      return {
-        success: true,
-        workerId: this.key,
-        data: {
-          examTitle: 'UPSC Civil Services Examination (CSE 2026)',
-          officialPortal: 'https://upsc.gov.in/',
-          schedule: {
-            notification: 'February 2026',
-            prelimsDate: 'May 2026',
-            mainsDate: 'September 2026',
-            interviewDate: 'January – April 2027'
-          },
-          markAllocation: {
-            prelims: {
-              totalMarks: 400,
-              papers: [
-                { paper: 'GS Paper I', questions: 100, marks: 200, negativeMarking: '1/3rd (0.66 marks)', nature: 'Rank-determining for Mains' },
-                { paper: 'GS Paper II (CSAT)', questions: 80, marks: 200, negativeMarking: '1/3rd (0.83 marks)', nature: 'Qualifying (Min 33% / 66 marks required)' }
-              ]
-            },
-            mains: {
-              totalMarks: 1750,
-              description: '9 Descriptive Papers (Paper A & B qualifying language papers of 300 marks each, not counted in merit; 7 papers of 250 marks each counted in merit)',
-              breakdown: [
-                { paper: 'Paper I (Essay)', marks: 250 },
-                { paper: 'Paper II (GS I: Indian Heritage, Culture, History & Geography)', marks: 250 },
-                { paper: 'Paper III (GS II: Governance, Constitution, Polity, Social Justice & IR)', marks: 250 },
-                { paper: 'Paper IV (GS III: Technology, Economic Dev, Biodiversity, Security)', marks: 250 },
-                { paper: 'Paper V (GS IV: Ethics, Integrity & Aptitude)', marks: 250 },
-                { paper: 'Paper VI (Optional Subject - Paper 1)', marks: 250 },
-                { paper: 'Paper VII (Optional Subject - Paper 2)', marks: 250 }
-              ]
-            },
-            interview: {
-              marks: 275,
-              grandTotal: '2,025 Marks (Mains 1750 + Interview 275)'
-            }
-          },
-          eligibility: {
-            ageLimit: '21 to 32 years (General category, 6 attempts; relaxations for OBC/SC/ST)',
-            education: "Graduation degree from recognized university"
-          }
-        },
-        sources: [{
-          title: 'Union Public Service Commission (Official Examination Scheme)',
-          subject: 'UPSC CSE Mark Allocation & Examination Pattern',
-          path: 'https://upsc.gov.in/'
-        }]
-      };
-    }
-
-    // 6. Default Multi-Exam Schedule & Pattern Matrix
+    // 6. Default Matrix
     return {
       success: true,
       workerId: this.key,
