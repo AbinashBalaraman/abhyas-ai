@@ -96,10 +96,12 @@ export class MasterSupervisorOrchestrator {
     const workerPromises: Promise<WorkerResult>[] = [];
     const aggregatedSources: Source[] = [];
 
+    const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer|solve it|show solution|shortcut formula)\b/i.test(query);
+
     // 1. Check if query is asking for exam details, mark allocation, dates, pattern, negative marking, eligibility, attempts, optional
     const isExamQuery = /\b(exam|notification|admit card|dates|schedule|when is|cutoff|vacancy|vacancies|eligibility|apply|calendar|sbi|ibps|ssc|rrb|upsc|cgl|chsl|ntpc|po|clerk|ias|marks|mark allocation|marking scheme|negative marking|tier|prelims|mains|sectional|weightage|duration|pattern|syllabus|age limit|attempts|optional|interview|paper)\b/i.test(q);
     
-    if (isExamQuery) {
+    if (isExamQuery && !isSolvingPrecedingProblem) {
       const examWorker = this.registry.getAgent('exam_intel');
       if (examWorker) {
         workerPromises.push(examWorker.execute({
@@ -112,7 +114,6 @@ export class MasterSupervisorOrchestrator {
     }
 
     // 2. Check if query is asking for subject concepts, formulas, or derivations (unless referring to solving a preceding problem)
-    const isSolvingPrecedingProblem = /\b(this problem|solve this|the above|this question|the answer)\b/i.test(query);
     if (!isSolvingPrecedingProblem && /\b(formula|explain|concept|rule|rules|derive|derivation|theorem|definition|how to solve|difference between|interest|percentage|ratio|algebra|geometry|trigonometry|set theory|venn diagram|syllogism|puzzle|blood relation|grammar|idiom|speed|distance|work|profit|loss|physics|chemistry|biology)\b/i.test(query.toLowerCase())) {
       const ragWorker = this.registry.getAgent('knowledge_rag');
       if (ragWorker) {
@@ -125,8 +126,8 @@ export class MasterSupervisorOrchestrator {
       }
     }
 
-    // 3. Check if query asks for practice questions / quiz
-    if (/\b(quiz|practice|mcq|mcqs|test me|questions|mock|problem|solve this|solution)\b/i.test(query.toLowerCase())) {
+    // 3. Check if query asks for practice questions / quiz (unless referring to solving a preceding problem)
+    if (!isSolvingPrecedingProblem && /\b(quiz|practice|mcq|mcqs|test me|questions|mock|generate problem|give me a problem)\b/i.test(query.toLowerCase())) {
       const quizWorker = this.registry.getAgent('quiz_generator');
       if (quizWorker) {
         workerPromises.push(quizWorker.execute({
@@ -177,10 +178,11 @@ CURRENT REAL-WORLD DATE: August 2026
 === STRICT CONVERSATIONAL GUIDELINES ===
 1. Speak naturally, warmly, and like an expert human mentor. Maintain seamless conversational continuity across long multi-turn chats.
 2. CONTINUOUS CONTEXT RETENTION:
-   - When a student asks a follow-up question (e.g. "What about optional papers?", "How is the interview evaluated?", "What is the age limit and attempts?", "What is the negative marking?"), DO NOT ask "Which exam are you targeting?". Look at the exam or topic discussed in the recent conversation turns (e.g. UPSC CSE, SSC CGL, SBI PO, IBPS PO, RRB NTPC) and answer directly for that active exam.
+   - When a student asks a follow-up question (e.g. "What about optional papers?", "How is the interview evaluated?", "What is the age limit and attempts?", "What is the negative marking?"), DO NOT ask "Which exam are you targeting?".
+   - If verified factual data for an exam is present in the VERIFIED FACTUAL EXAM & KNOWLEDGE DATA block below, you MUST use that data directly and answer the user's question for that exam immediately.
    - If the student explicitly switches topics (e.g. "Now let's switch to SSC CGL"), immediately switch and answer for the new topic.
 3. STEP-BY-STEP PROBLEM SOLVER:
-   - When a student asks "Solve this problem step by step" or "Show me the shortcut", look at the problem/question stated in the immediate preceding turns. Provide the complete step-by-step mathematical derivation and the speed shortcut using LaTeX formatting \\(...\\) and \\[...\\].
+   - When a student asks "Solve this problem step by step", "Show me the shortcut", or "What is the answer?", look at the practice question or math problem stated in the immediately preceding message in the conversation history. Provide the complete step-by-step mathematical derivation and the speed shortcut using LaTeX formatting \\(...\\) and \\[...\\].
 4. MARK ALLOCATION & EXAM PATTERNS:
    - Provide structured markdown tables for mark allocation (Questions, Marks, Time, Negative Marking, Qualifying vs Merit status).
 5. EXPLORATORY TOPICS:
