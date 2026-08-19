@@ -239,14 +239,14 @@ export async function findContext(query: string): Promise<{ context: string; sou
     }
 
     scoredChapters.sort((a, b) => b.score - a.score);
-    const topChapters = scoredChapters.slice(0, 3);
+    const topChapters = scoredChapters.slice(0, 2);
 
     if (topChapters.length > 0) {
       const sources: Source[] = [];
       const contextParts: string[] = [];
 
       for (const { chapter, score, content } of topChapters) {
-        const snippet = extractRelevantSnippet(content, keywords, 8000);
+        const snippet = extractRelevantSnippet(content, keywords, 3500);
         contextParts.push(`[Source: ${chapter.title} (${chapter.subject})]\n\n${snippet}`);
         sources.push({
           title: chapter.title,

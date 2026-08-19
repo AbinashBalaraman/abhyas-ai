@@ -45,6 +45,7 @@ async function callGeminiDirect(
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(4000),
         body: JSON.stringify({
           contents: [
             {
@@ -52,7 +53,7 @@ async function callGeminiDirect(
               parts: [{ text: `${systemPrompt}\n\nUser Message: ${userMessage}` }]
             }
           ],
-          generationConfig: { temperature: 0.3 }
+          generationConfig: { temperature: 0.3, maxOutputTokens: 1500 }
         })
       }
     );
@@ -72,11 +73,10 @@ async function callGeminiDirect(
 }
 
 const FALLBACK_MODELS = [
-  'deepseek-v4-flash-free',
   'nemotron-3.5-lightning-free',
   'hy3-free',
-  'laguna-s-2.1-free',
   'mimo-v2.5-free',
+  'deepseek-v4-flash-free',
   'nemotron-3-ultra-free'
 ];
 
@@ -91,7 +91,7 @@ async function callOpenCodeZenWithFallback(
   let result = await tryOpenCode(modelName, systemPrompt, userMessage, apiKey);
   if (result.success) return result.text;
 
-  // Cascade through high-capacity free models
+  // Cascade through high-capacity free models with fast 4.5s timeouts
   for (const altModel of FALLBACK_MODELS) {
     if (altModel === modelName) continue;
     console.log(`Cascade failover to OpenCode ${altModel}...`);
@@ -110,7 +110,7 @@ async function callOpenCodeZenWithFallback(
   result = await tryOpenCode('nemotron-3.5-lightning-free', systemPrompt, userMessage, '');
   if (result.success) return result.text;
 
-  return `⚠️ Model communication error: All AI channels are temporarily busy. Please wait a few seconds and try again.`;
+  return `⚠️ All AI channels are temporarily busy. Please wait a moment and try your question again.`;
 }
 
 async function tryOpenCode(
@@ -130,13 +130,15 @@ async function tryOpenCode(
     const response = await fetch('https://opencode.ai/zen/v1/chat/completions', {
       method: 'POST',
       headers,
+      signal: AbortSignal.timeout(4500),
       body: JSON.stringify({
         model: modelName,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }
         ],
-        temperature: 0.3
+        temperature: 0.3,
+        max_tokens: 1500
       })
     });
 
@@ -176,6 +178,7 @@ export async function webSearch(query: string): Promise<WebSearchResult> {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(4000),
         body: JSON.stringify({
           contents: [
             {
@@ -188,7 +191,7 @@ export async function webSearch(query: string): Promise<WebSearchResult> {
             }
           ],
           tools: [{ googleSearch: {} }],
-          generationConfig: { temperature: 0.2 }
+          generationConfig: { temperature: 0.2, maxOutputTokens: 1000 }
         })
       }
     );
