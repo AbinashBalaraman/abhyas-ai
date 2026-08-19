@@ -12,9 +12,8 @@ export class MultiTierModelGateway {
   private breakers = new Map<string, ModelCircuitBreaker>();
 
   private constructor() {
-    this.breakers.set('opencode-deepseek', new ModelCircuitBreaker('OpenCode-DeepSeek'));
-    this.breakers.set('opencode-mimo', new ModelCircuitBreaker('OpenCode-Mimo'));
     this.breakers.set('gemini-direct', new ModelCircuitBreaker('Gemini-Direct'));
+    this.breakers.set('opencode-deepseek', new ModelCircuitBreaker('OpenCode-DeepSeek'));
   }
 
   public static getInstance(): MultiTierModelGateway {
@@ -34,7 +33,6 @@ export class MultiTierModelGateway {
   ): Promise<{ text: string; tierUsed: ModelTier; provider: string }> {
     const geminiKey = process.env.GEMINI_API_KEY || '';
     const openCodeKey = process.env.OPENCODE_ZEN_API_KEY || process.env.OPENAI_API_KEY || '';
-    const modelKey = preferredModel.toLowerCase();
 
     // 1. Primary: Gemini 3.6 Flash / Gemini 2.5 Flash
     if (geminiKey) {
@@ -49,7 +47,7 @@ export class MultiTierModelGateway {
               return { text: res, tierUsed: 'TIER2_GEMINI', provider: gm };
             }
           } catch (e) {
-            // try next gemini model
+            // try fallback model
           }
         }
         geminiBreaker.recordFailure();
@@ -59,9 +57,7 @@ export class MultiTierModelGateway {
     // 2. Tier 2: OpenCode Models (DeepSeek v4 Flash -> Mimo 2.5)
     const tier1Breaker = this.breakers.get('opencode-deepseek')!;
     if (tier1Breaker.isAvailable() && openCodeKey) {
-      const initialModel = modelKey.includes('mimo') ? 'mimo-v2.5-free' : 'deepseek-v4-flash-free';
-      const modelsToTry = [initialModel, 'mimo-v2.5-free', 'deepseek-v4-flash-free'];
-
+      const modelsToTry = ['deepseek-v4-flash-free', 'mimo-v2.5-free'];
       for (const m of modelsToTry) {
         try {
           const openCodeRes = await this.callOpenCode(m, systemPrompt, messages, openCodeKey);
@@ -70,7 +66,7 @@ export class MultiTierModelGateway {
             return { text: openCodeRes, tierUsed: 'TIER1_OPENCODE', provider: m };
           }
         } catch (err) {
-          // try next model
+          // try next
         }
       }
       tier1Breaker.recordFailure();
@@ -113,7 +109,7 @@ export class MultiTierModelGateway {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         model: modelName,
         messages: formattedMessages,
@@ -143,7 +139,7 @@ export class MultiTierModelGateway {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        signal: AbortSignal.timeout(7000),
+        signal: AbortSignal.timeout(15000),
         body: JSON.stringify({
           systemInstruction: {
             parts: [{ text: systemPrompt }]
