@@ -1,5 +1,10 @@
 # 🎓 Abhyas AI — Competitive Exams Prep Platform & Intelligent Tutor
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-abhyas--ai.vercel.app-00C853?style=for-the-badge&logo=vercel&logoColor=white)](https://abhyas-ai.vercel.app/)
+
+**[🌐 Explore Live Deployment →](https://abhyas-ai.vercel.app/)**
+
+
 [![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.0.0-61DAFB?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
